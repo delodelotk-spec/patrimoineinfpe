@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestion du Patrimoine - INFPE</title>
-<!-- Librairie Supabase version UMD stable -->
+<title>Gestion du Patrimoine - INFPE (Version 10 Go)</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
-<!-- Librairie Excel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root { --primary: #1e3a8a; --primary-light: #3b82f6; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #06b6d4; --bg: #f0f4f8; }
@@ -59,6 +57,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .btn-primary { background: var(--primary); padding: 8px 16px; }
 .btn-success { background: var(--success); padding: 8px 16px; }
 .btn-info { background: var(--info); padding: 8px 16px; }
+.btn-export { background: #059669; padding: 6px 12px; }
 .btn:hover { opacity: 0.85; }
 .search-bar { display: flex; gap: 10px; flex-wrap: wrap; padding: 10px; background: white; border: 2px solid red; border-radius: 4px; margin-bottom: 10px; }
 .search-bar input, .search-bar select { padding: 6px; border: 2px solid var(--primary); border-radius: 4px; font-size: 12px; }
@@ -120,29 +119,44 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; }
 .status-connected { background: var(--success); color: white; }
 .status-disconnected { background: var(--danger); color: white; }
+.storage-indicator { background: #e0e7ff; padding: 8px 12px; border-radius: 4px; font-size: 11px; margin-left: 10px; }
+.pagination-controls { display: flex; justify-content: center; gap: 10px; margin: 15px 0; align-items: center; }
+.pagination-controls button { padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; }
+.pagination-controls button:disabled { background: #9ca3af; cursor: not-allowed; }
+.pagination-controls span { font-weight: bold; }
+.loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 99999; color: white; font-size: 16px; }
+.loading-overlay.show { display: flex; }
 </style>
 </head>
 <body>
 
+<div class="loading-overlay" id="loadingOverlay">
+  <div style="text-align:center;">
+    <div style="font-size:24px; margin-bottom:10px;">⏳ Chargement en cours...</div>
+    <div id="loadingText">Veuillez patienter</div>
+  </div>
+</div>
+
 <div id="loginScreen">
   <div class="login-box">
     <h2> INFPE - Gestion du Patrimoine</h2>
-    <input type="text" id="loginUser" placeholder="Nom d'utilisateur" autocomplete="off" data-tooltip="Saisissez votre nom d'utilisateur">
-    <input type="password" id="loginPass" placeholder="Mot de passe" data-tooltip="Saisissez votre mot de passe">
-    <button onclick="doLogin()" data-tooltip="Cliquez pour vous connecter au système">Se connecter</button>
+    <input type="text" id="loginUser" placeholder="Nom d'utilisateur" autocomplete="off">
+    <input type="password" id="loginPass" placeholder="Mot de passe">
+    <button onclick="doLogin()">Se connecter</button>
     <p id="loginError" style="color:red; margin-top:10px; text-align:center; font-size:12px;"></p>
   </div>
 </div>
 
 <div id="app" style="display:none;">
   <div id="appHeader">
-    <h1 data-tooltip="Système de Gestion du Patrimoine de l'INFPE">🏛️ INFPE - Gestion du Patrimoine</h1>
+    <h1>🏛️ INFPE - Gestion du Patrimoine (Version 10 Go)</h1>
     <div class="user-info">
-      <span id="currentUserDisplay" data-tooltip="Utilisateur actuellement connecté"></span>
-      <span id="supabaseStatus" data-tooltip="État de la connexion au cloud Supabase"></span>
-      <button onclick="openModal('passwordModal')" data-tooltip="Modifier votre mot de passe personnel">🔑 Mot de passe</button>
-      <button onclick="openModal('cloudModal')" data-tooltip="Configurer la synchronisation cloud">☁️ Synchronisation</button>
-      <button onclick="doLogout()" data-tooltip="Quitter votre session">🚪 Déconnexion</button>
+      <span id="currentUserDisplay"></span>
+      <span id="supabaseStatus"></span>
+      <span id="storageIndicator" class="storage-indicator">💾 0 Mo</span>
+      <button onclick="openModal('passwordModal')">🔑 Mot de passe</button>
+      <button onclick="openModal('cloudModal')">☁️ Synchronisation</button>
+      <button onclick="doLogout()">🚪 Déconnexion</button>
     </div>
   </div>
   <div id="tabsContainer"></div>
@@ -228,12 +242,12 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
     <div class="modal-header"><h3>☁️ Synchronisation Cloud</h3><button class="modal-close" onclick="closeModal('cloudModal')">×</button></div>
     <div class="modal-body">
       <div style="padding:15px; background:#fef3c7; border:2px solid var(--warning); border-radius:6px; margin-bottom:15px; font-size:12px;">
-        <b>📌 Important :</b> La synchronisation est désormais automatique et perpétuelle. Vos identifiants sont pré-configurés.
+        <b>📌 Important :</b> La synchronisation est automatique et perpétuelle. Vos identifiants sont pré-configurés.
       </div>
       <div class="supabase-config">
         <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">⚙️ Configuration Supabase</h4>
-        <label>URL du projet Supabase</label><input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
-        <label>Clé publique (Anon Key)</label><input type="text" id="supabaseKey" placeholder="eyJhbGciOi...">
+        <label>URL du projet Supabase</label><input type="text" id="supabaseUrl">
+        <label>Clé publique (Anon Key)</label><input type="text" id="supabaseKey">
         <div style="margin-top:15px;">
           <button class="btn btn-primary" onclick="testAndSaveSupabase()">🔗 Tester et enregistrer</button>
         </div>
@@ -287,22 +301,14 @@ const DIRECTIONS = [
 ];
 
 const CODE_PREFIX = {
-  "Agence Comptable": "/23/421.08/11/18/03/",
-  "Bureau comptable Matières principal": "/23/421.08/11/18/03/",
-  "Direction de l'Administration des Finances": "/23/421.08/11/18/03/",
-  "Direction de la Formation continue et de la Recherche-action": "/23/421.08/11/18/03/",
-  "Direction du contrôle des marchés et des engagements financiers": "/23/421.08/11/18/03/",
-  "Direction des Etudes et des Stages": "/23/421.08/11/18/03/",
-  "Direction des Ressources humaines": "/23/421.08/11/18/03/",
-  "Direction générale": "/23/421.08/11/18/03/",
-  "Secrétariat général": "/23/421.08/11/18/03/",
-  "Direction régionale de l'INFPE de Oubri": "/23/421.08/11/18/03/",
-  "Direction régionale de l'INFPE de Bankui": "/23/421.10/01/15/02/",
-  "Direction régionale de l'INFPE du Djôrô": "/23/421.16/13/21/24/",
-  "Direction régionale de l'INFPE du Goulmou": "/23/421.11/08/09/03/",
-  "Direction régionale de l'INFPE du Guiriko": "/23/421.13/09/10/02/",
-  "Direction régionale de l'INFPE du Nakambé": "/23/421.11/04/04/10/",
-  "Direction régionale de l'INFPE de Yaadga": "/23/421.13/10/29/07/"
+  "Agence Comptable": "/23/421.08/11/18/03/", "Bureau comptable Matières principal": "/23/421.08/11/18/03/",
+  "Direction de l'Administration des Finances": "/23/421.08/11/18/03/", "Direction de la Formation continue et de la Recherche-action": "/23/421.08/11/18/03/",
+  "Direction du contrôle des marchés et des engagements financiers": "/23/421.08/11/18/03/", "Direction des Etudes et des Stages": "/23/421.08/11/18/03/",
+  "Direction des Ressources humaines": "/23/421.08/11/18/03/", "Direction générale": "/23/421.08/11/18/03/",
+  "Secrétariat général": "/23/421.08/11/18/03/", "Direction régionale de l'INFPE de Oubri": "/23/421.08/11/18/03/",
+  "Direction régionale de l'INFPE de Bankui": "/23/421.10/01/15/02/", "Direction régionale de l'INFPE du Djôrô": "/23/421.16/13/21/24/",
+  "Direction régionale de l'INFPE du Goulmou": "/23/421.11/08/09/03/", "Direction régionale de l'INFPE du Guiriko": "/23/421.13/09/10/02/",
+  "Direction régionale de l'INFPE du Nakambé": "/23/421.11/04/04/10/", "Direction régionale de l'INFPE de Yaadga": "/23/421.13/10/29/07/"
 };
 
 const COLONNES = ["CODE MATIERE", "DESIGNATION", "TYPE/MODELE", "QTE", "ETAT", "FORMAT", "ANNEE D'ACQUISITION", "BUREAU/SERVICE", "UTILISATEUR", "DIRECTION REGIONALE", "DATE INVENTAIRE"];
@@ -312,15 +318,33 @@ let currentTab = 'dashboard';
 let editingBienId = null;
 let supabase = null;
 let syncTimeout = null;
+let paginationState = {};
 
-// ⚠️ IDENTIFIANTS SUPABASE INTÉGRÉS ET PRÊTS À L'EMPLOI ⚠️
 const DEFAULT_SUPABASE_URL = 'https://jpzbdhmktvbwzhhmxmaz.supabase.co';
 const DEFAULT_SUPABASE_KEY = 'sb_publishable_JbAgx2R8-dg3Uk-27Tr4Zw_lRFAP-wu';
-
 const DB_NAME = 'infpe_patrimoine';
+const PAGE_SIZE = 1000; // Charger par lots de 1000 pour gérer 10 Go
 let idb = null;
 
 function isAdmin() { return DB.currentUser && DB.currentUser.type === 'Administrateur'; }
+
+function showLoading(text = 'Veuillez patienter...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function updateStorageIndicator() {
+  const size = JSON.stringify(DB).length;
+  const mb = (size / (1024 * 1024)).toFixed(2);
+  const gb = (size / (1024 * 1024 * 1024)).toFixed(2);
+  const text = size > 1024 * 1024 * 1024 ? `💾 ${gb} Go` : `💾 ${mb} Mo`;
+  const el = document.getElementById('storageIndicator');
+  if (el) el.textContent = text;
+}
 
 function openIDB() {
   return new Promise((resolve, reject) => {
@@ -354,10 +378,10 @@ async function loadFromIDB() {
     settings.forEach(s => { if (s.key === 'logo') DB.logo = s.value; });
     DB.currentUser = null;
     if (DB.users.length === 0) {
-      // Compte administrateur par défaut créé en arrière-plan (non affiché à l'écran)
       DB.users = [{ username: 'admin', password: 'admin', type: 'Administrateur', nom: 'Administrateur', prenom: 'Principal', directions: [...DIRECTIONS] }];
       await saveDB();
     }
+    updateStorageIndicator();
   } catch(e) { console.error(e); }
 }
 
@@ -374,8 +398,7 @@ async function saveDB() {
     const ss = tx.objectStore('settings');
     if (DB.logo) ss.put({ key: 'logo', value: DB.logo });
     await new Promise((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = e => reject(e); });
-    
-    // 🔄 SYNCHRONISATION PERPÉTUELLE EN ARRIÈRE-PLAN
+    updateStorageIndicator();
     if (supabase) triggerBackgroundSync();
   } catch(e) { console.error('Erreur sauvegarde:', e); }
 }
@@ -388,28 +411,45 @@ function triggerBackgroundSync() {
 async function syncToSupabaseBackground() {
   if (!supabase) return;
   try {
-    if (DB.biens.length > 0) await supabase.from('biens').upsert(DB.biens, { onConflict: 'id' });
+    // Synchronisation par lots pour gérer 10 Go
+    const batchSize = 100;
+    for (let i = 0; i < DB.biens.length; i += batchSize) {
+      const batch = DB.biens.slice(i, i + batchSize);
+      await supabase.from('biens').upsert(batch, { onConflict: 'id' });
+    }
     if (DB.users.length > 0) await supabase.from('users').upsert(DB.users, { onConflict: 'username' });
     const refsToSync = [
-      { key: 'nomenclature', value: DB.nomenclature },
-      { key: 'personnel', value: DB.personnel },
-      { key: 'services', value: DB.services },
-      { key: 'modeles', value: DB.modeles }
+      { key: 'nomenclature', value: DB.nomenclature }, { key: 'personnel', value: DB.personnel },
+      { key: 'services', value: DB.services }, { key: 'modeles', value: DB.modeles }
     ];
     for (const ref of refsToSync) await supabase.from('refs').upsert(ref, { onConflict: 'key' });
     if (DB.logo) await supabase.from('settings').upsert({ key: 'logo', value: DB.logo }, { onConflict: 'key' });
     updateSupabaseStatus(true);
-  } catch(e) {
-    console.warn('⚠️ Erreur de synchronisation:', e.message);
-    updateSupabaseStatus(false);
-  }
+  } catch(e) { console.warn('️ Erreur de synchronisation:', e.message); updateSupabaseStatus(false); }
 }
 
 async function loadFromSupabase() {
   if (!supabase) return false;
   try {
-    const { data: biens, error: errBiens } = await supabase.from('biens').select('*');
-    if (!errBiens && biens && biens.length > 0) DB.biens = biens;
+    showLoading('Chargement depuis le cloud...');
+    // Chargement paginé pour gérer 10 Go
+    let allBiens = [];
+    let from = 0;
+    let to = PAGE_SIZE - 1;
+    let hasMore = true;
+    while (hasMore) {
+      const { data: biens, error: errBiens } = await supabase.from('biens').select('*').range(from, to);
+      if (errBiens) throw errBiens;
+      if (biens && biens.length > 0) {
+        allBiens = allBiens.concat(biens);
+        from += PAGE_SIZE;
+        to += PAGE_SIZE;
+        if (biens.length < PAGE_SIZE) hasMore = false;
+      } else {
+        hasMore = false;
+      }
+    }
+    if (allBiens.length > 0) DB.biens = allBiens;
     
     const { data: users, error: errUsers } = await supabase.from('users').select('*');
     if (!errUsers && users && users.length > 0) DB.users = users;
@@ -425,14 +465,15 @@ async function loadFromSupabase() {
     }
     
     const { data: settings, error: errSettings } = await supabase.from('settings').select('*');
-    if (!errSettings && settings && settings.length > 0) {
-      settings.forEach(s => { if (s.key === 'logo') DB.logo = s.value; });
-    }
+    if (!errSettings && settings && settings.length > 0) settings.forEach(s => { if (s.key === 'logo') DB.logo = s.value; });
+    
     await saveDB();
+    hideLoading();
     return true;
-  } catch(e) {
-    console.warn('Erreur de chargement depuis Supabase:', e);
-    return false;
+  } catch(e) { 
+    console.warn('Erreur de chargement depuis Supabase:', e); 
+    hideLoading();
+    return false; 
   }
 }
 
@@ -467,25 +508,12 @@ function doLogout() {
 }
 
 function initSupabase() {
-  // VÉRIFICATION DE SÉCURITÉ POUR ÉVITER L'ERREUR "createClient"
-  if (typeof window.supabase === 'undefined') {
-    console.error('❌ La bibliothèque Supabase ne s\'est pas chargée. Vérifiez votre connexion Internet.');
-    updateSupabaseStatus(false);
-    return false;
-  }
-
+  if (typeof window.supabase === 'undefined') { console.error('❌ La bibliothèque Supabase ne s\'est pas chargée.'); updateSupabaseStatus(false); return false; }
   const url = localStorage.getItem('supabase_url') || DEFAULT_SUPABASE_URL;
   const key = localStorage.getItem('supabase_key') || DEFAULT_SUPABASE_KEY;
-  
   if (url && key) {
-    try { 
-      supabase = window.supabase.createClient(url, key); 
-      updateSupabaseStatus(true); 
-      return true; 
-    } catch(e) { 
-      updateSupabaseStatus(false); 
-      return false; 
-    }
+    try { supabase = window.supabase.createClient(url, key); updateSupabaseStatus(true); return true; } 
+    catch(e) { updateSupabaseStatus(false); return false; }
   }
   updateSupabaseStatus(false); return false;
 }
@@ -516,10 +544,9 @@ async function testAndSaveSupabase() {
 
 async function syncToSupabase() {
   if (!supabase) { alert('Supabase n\'est pas configuré.'); return; }
-  try {
-    await syncToSupabaseBackground();
-    alert('✅ Synchronisation manuelle réussie !');
-  } catch(e) { alert('❌ Erreur : ' + e.message); }
+  showLoading('Synchronisation en cours...');
+  try { await syncToSupabaseBackground(); hideLoading(); alert('✅ Synchronisation manuelle réussie !'); } 
+  catch(e) { hideLoading(); alert('❌ Erreur : ' + e.message); }
 }
 
 async function initApp() { initSupabase(); buildTabs(); showTab('dashboard'); }
@@ -537,7 +564,7 @@ function buildTabs() {
     const shortName = dir.length > 30 ? dir.substring(0, 28) + '…' : dir;
     addTabBtn(container, id, '🏢 ' + shortName, 'Gérer les biens de : ' + dir);
   });
-  if (admin) addTabBtn(container, 'general', '📋 Liste générale', 'Liste complète (Admin)');
+  if (admin) addTabBtn(container, 'general', ' Liste générale', 'Liste complète (Admin)');
   if (admin) addTabBtn(container, 'params', '⚙️ Paramètres', 'Configuration (Admin)');
 }
 
@@ -553,11 +580,7 @@ const ANIMATIONS = ['anim-slideRight', 'anim-slideLeft', 'anim-slideDown', 'anim
 const COLORS = ['#1e3a8a', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 function showTab(tabId) {
-  if ((tabId === 'general' || tabId === 'params') && !isAdmin()) {
-    alert('⛔ Accès réservé à l\'administrateur.');
-    showTab('dashboard');
-    return;
-  }
+  if ((tabId === 'general' || tabId === 'params') && !isAdmin()) { alert('⛔ Accès réservé à l\'administrateur.'); showTab('dashboard'); return; }
   currentTab = tabId;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
   const content = document.getElementById('contentArea');
@@ -583,9 +606,7 @@ function showSubTab(tabId, sub, btn) {
 
 function refreshCurrentView(preserveSearch = true) {
   const savedSearches = {};
-  if (preserveSearch) {
-    document.querySelectorAll('.search-bar input').forEach(input => { savedSearches[input.id] = input.value; });
-  }
+  if (preserveSearch) document.querySelectorAll('.search-bar input').forEach(input => { savedSearches[input.id] = input.value; });
   if (currentTab === 'dashboard') renderDashboard();
   else if (currentTab === 'general') renderGeneralList();
   else if (currentTab === 'params') renderParams();
@@ -622,12 +643,13 @@ function renderDashboard() {
   let html = `
     <div style="display:flex; gap:20px; align-items:center; margin-bottom:20px;">
       ${DB.logo ? `<img src="${DB.logo}" class="logo-display">` : '<div style="width:150px; height:80px; background:#e5e7eb; display:flex; align-items:center; justify-content:center; border-radius:6px;">Logo</div>'}
-      <div><h2 style="color:var(--primary);">Tableau de bord - INFPE</h2><p style="color:#6b7280;">Système synchronisé en temps réel</p></div>
+      <div><h2 style="color:var(--primary);">Tableau de bord - INFPE</h2><p style="color:#6b7280;">Système optimisé pour 10 Go de données</p></div>
     </div>
     <div class="dashboard-grid">
       <div class="stat-card"><h4>📦 Nombre total de biens</h4><div class="value">${totalBiens}</div></div>
       <div class="stat-card"><h4>🏢 Directions actives</h4><div class="value">${nbDirections}</div></div>
       <div class="stat-card"><h4>📊 Par état</h4><div style="font-size:12px; margin-top:5px;">${Object.entries(parEtat).map(([e,n]) => `<div><b>${e}:</b> ${n}</div>`).join('')}</div></div>
+      <div class="stat-card"><h4>💾 Stockage utilisé</h4><div class="value" style="font-size:18px;">${(JSON.stringify(DB).length / (1024 * 1024)).toFixed(2)} Mo</div></div>
     </div>
     <div class="chart-container">
       <h4 style="color:var(--primary); margin-bottom:15px;">📊 Nombre de biens par direction</h4>
@@ -645,7 +667,7 @@ function renderDashboard() {
 function renderDirectionTab(direction) {
   const content = document.getElementById('contentArea');
   const userDirs = DB.currentUser?.directions || DIRECTIONS;
-  if (!userDirs.includes(direction)) { content.innerHTML = '<p style="color:red; padding:20px;">⛔ Accès non autorisé.</p>'; return; }
+  if (!userDirs.includes(direction)) { content.innerHTML = '<p style="color:red; padding:20px;"> Accès non autorisé.</p>'; return; }
   const tabId = 'dir_' + direction.replace(/[^a-zA-Z0-9]/g, '_');
   const escDir = direction.replace(/'/g, "\\'");
   const admin = isAdmin();
@@ -655,10 +677,7 @@ function renderDirectionTab(direction) {
   content.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
       <h2 style="color:var(--primary);">🏢 ${direction}</h2>
-      <div>
-        <button class="btn btn-primary" onclick="openAddBien('${escDir}')">➕ Nouveau bien</button>
-        ${importBtn} ${deleteAllBtn}
-      </div>
+      <div><button class="btn btn-primary" onclick="openAddBien('${escDir}')">➕ Nouveau bien</button>${importBtn} ${deleteAllBtn}</div>
     </div>
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="showSubTab('${tabId}', 'biens', this)">📋 Liste des biens</button>
@@ -676,16 +695,16 @@ function renderDirectionTab(direction) {
     <div class="sub-content" id="${tabId}_syntheseNon"></div>
     <div class="sub-content" id="${tabId}_confrontation"></div>
     <div class="sub-content" id="${tabId}_reformes"></div>`;
-  renderBiensList(direction, tabId + '_biens', null);
-  renderBiensList(direction, tabId + '_existants', true, true);
-  renderBiensList(direction, tabId + '_noncoches', true, false);
+  renderBiensList(direction, tabId + '_biens', null, null, 'Liste_complet');
+  renderBiensList(direction, tabId + '_existants', true, true, 'Existants');
+  renderBiensList(direction, tabId + '_noncoches', true, false, 'Non_coches');
   renderSynthese(direction, tabId + '_synthese', true);
   renderSynthese(direction, tabId + '_syntheseNon', false);
   renderConfrontation(direction, tabId + '_confrontation');
   renderReformes(direction, tabId + '_reformes');
 }
 
-function renderBiensList(direction, containerId, filterChecked, checkedValue) {
+function renderBiensList(direction, containerId, filterChecked, checkedValue, exportSuffix) {
   const container = document.getElementById(containerId);
   if (!container) return;
   let biens = DB.biens.filter(b => b.direction === direction && !b.reforme);
@@ -693,6 +712,10 @@ function renderBiensList(direction, containerId, filterChecked, checkedValue) {
   const searchId = containerId + '_search';
   const tableId = containerId + '_table';
   container.innerHTML = `
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">${exportSuffix.replace(/_/g, ' ')}</h3>
+      <button class="btn btn-export" onclick="exportBiensList('${direction}', ${filterChecked}, ${checkedValue}, '${exportSuffix}')">📊 Exporter cette liste en Excel</button>
+    </div>
     <div class="search-bar">
       <input type="text" id="${searchId}_code" placeholder="Code" maxlength="6" oninput="filterTable('${containerId}')" style="width:80px;">
       <input type="text" id="${searchId}_annee" placeholder="Année" maxlength="4" oninput="filterTable('${containerId}')" style="width:70px;">
@@ -703,12 +726,99 @@ function renderBiensList(direction, containerId, filterChecked, checkedValue) {
       <button class="btn" style="background:#6b7280; color:white;" onclick="chooseColumns('${containerId}')">👁️ Colonnes</button>
     </div>
     <div class="checkbox-grid" id="${containerId}_colCheck" style="display:none;"></div>
-    <div class="table-wrapper"><table class="patrimoine-table" id="${tableId}"><thead><tr id="${tableId}_head"></tr></thead><tbody id="${tableId}_body"></tbody></table></div>`;
+    <div class="table-wrapper"><table class="patrimoine-table" id="${tableId}"><thead><tr id="${tableId}_head"></tr></thead><tbody id="${tableId}_body"></tbody></table></div>
+    <div class="pagination-controls" id="${containerId}_pagination"></div>`;
   container.dataset.biens = JSON.stringify(biens);
   container.dataset.direction = direction;
   if (!window.visibleCols) window.visibleCols = {};
   if (!window.visibleCols[containerId]) window.visibleCols[containerId] = [...COLONNES, 'ACTIONS'];
-  fillTableHead(containerId); fillTableBody(containerId, biens);
+  fillTableHead(containerId); 
+  // Pagination : afficher les 100 premiers par défaut
+  paginationState[containerId] = { page: 1, pageSize: 100, total: biens.length };
+  renderPaginatedTable(containerId, biens);
+}
+
+function renderPaginatedTable(containerId, biens) {
+  const state = paginationState[containerId];
+  if (!state) return;
+  const start = (state.page - 1) * state.pageSize;
+  const end = start + state.pageSize;
+  const pageBiens = biens.slice(start, end);
+  fillTableBody(containerId, pageBiens);
+  renderPaginationControls(containerId, biens.length);
+}
+
+function renderPaginationControls(containerId, total) {
+  const state = paginationState[containerId];
+  if (!state) return;
+  const totalPages = Math.ceil(total / state.pageSize);
+  const div = document.getElementById(containerId + '_pagination');
+  if (!div) return;
+  div.innerHTML = `
+    <button onclick="changePage('${containerId}', 1)" ${state.page === 1 ? 'disabled' : ''}> Première</button>
+    <button onclick="changePage('${containerId}', ${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>◀ Précédent</button>
+    <span>Page ${state.page} sur ${totalPages} (${total} biens)</span>
+    <button onclick="changePage('${containerId}', ${state.page + 1})" ${state.page === totalPages ? 'disabled' : ''}>Suivant ▶</button>
+    <button onclick="changePage('${containerId}', ${totalPages})" ${state.page === totalPages ? 'disabled' : ''}>Dernière </button>
+    <select onchange="changePageSize('${containerId}', this.value)">
+      <option value="50" ${state.pageSize === 50 ? 'selected' : ''}>50 par page</option>
+      <option value="100" ${state.pageSize === 100 ? 'selected' : ''}>100 par page</option>
+      <option value="500" ${state.pageSize === 500 ? 'selected' : ''}>500 par page</option>
+      <option value="1000" ${state.pageSize === 1000 ? 'selected' : ''}>1000 par page</option>
+    </select>`;
+}
+
+function changePage(containerId, page) {
+  const state = paginationState[containerId];
+  if (!state) return;
+  const container = document.getElementById(containerId);
+  const biens = JSON.parse(container.dataset.biens);
+  state.page = page;
+  renderPaginatedTable(containerId, biens);
+}
+
+function changePageSize(containerId, size) {
+  const state = paginationState[containerId];
+  if (!state) return;
+  state.pageSize = parseInt(size);
+  state.page = 1;
+  const container = document.getElementById(containerId);
+  const biens = JSON.parse(container.dataset.biens);
+  renderPaginatedTable(containerId, biens);
+}
+
+function exportBiensList(direction, filterChecked, checkedValue, suffix) {
+  showLoading('Préparation de l\'export Excel...');
+  setTimeout(() => {
+    let biens = DB.biens.filter(b => b.direction === direction && !b.reforme);
+    if (filterChecked !== null) biens = biens.filter(b => b.checked === checkedValue);
+    
+    // Pour les très gros volumes, exporter par lots
+    if (biens.length > 10000) {
+      exportLargeDataset(biens, `Liste_${suffix}_${direction.replace(/\s/g, '_')}`);
+    } else {
+      const rows = [COLONNES];
+      biens.forEach(b => rows.push(COLONNES.map(c => b[c] || '')));
+      downloadExcel(rows, `Liste_${suffix}_${direction.replace(/\s/g, '_')}`);
+    }
+    hideLoading();
+  }, 100);
+}
+
+function exportLargeDataset(biens, filename) {
+  // Export par lots pour éviter les problèmes de mémoire
+  const wb = XLSX.utils.book_new();
+  const batchSize = 5000;
+  let sheetNum = 1;
+  for (let i = 0; i < biens.length; i += batchSize) {
+    const batch = biens.slice(i, i + batchSize);
+    const rows = [COLONNES];
+    batch.forEach(b => rows.push(COLONNES.map(c => b[c] || '')));
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, `Feuille ${sheetNum}`);
+    sheetNum++;
+  }
+  XLSX.writeFile(wb, filename + '.xlsx');
 }
 
 function fillTableHead(containerId) {
@@ -732,7 +842,7 @@ function fillTableBody(containerId, biens) {
         html += `<td style="white-space:nowrap;">
           <input type="checkbox" ${b.checked ? 'checked' : ''} onchange="toggleCheck('${b.id}', this.checked)">
           <button class="btn btn-edit" onclick="editBien('${b.id}')">✏️</button>
-          ${admin && !isExistants ? `<button class="btn btn-delete" onclick="deleteBien('${b.id}', this)">🗑️</button>` : ''}
+          ${admin && !isExistants ? `<button class="btn btn-delete" onclick="deleteBien('${b.id}', this)">️</button>` : ''}
           ${!isExistants ? `<button class="btn btn-reforme" onclick="proposeReforme('${b.id}', this)">🔄</button>` : ''}
         </td>`;
       } else { html += `<td>${b[c] || ''}</td>`; }
@@ -766,7 +876,9 @@ function filterTable(containerId) {
     return true;
   });
   document.getElementById(searchId + '_count').textContent = biens.length + ' bien(s)';
-  fillTableBody(containerId, biens);
+  // Réinitialiser la pagination après filtrage
+  paginationState[containerId] = { page: 1, pageSize: paginationState[containerId]?.pageSize || 100, total: biens.length };
+  renderPaginatedTable(containerId, biens);
 }
 
 async function toggleCheck(bienId, checked) {
@@ -803,7 +915,8 @@ function updateCols(containerId, col, checked) {
   window.visibleCols[containerId] = cols;
   fillTableHead(containerId);
   const container = document.getElementById(containerId);
-  fillTableBody(containerId, JSON.parse(container.dataset.biens));
+  const biens = JSON.parse(container.dataset.biens);
+  renderPaginatedTable(containerId, biens);
 }
 
 function renderSynthese(direction, containerId, onlyChecked) {
@@ -821,7 +934,10 @@ function renderSynthese(direction, containerId, onlyChecked) {
   });
   const rows = Object.values(synth);
   container.innerHTML = `
-    <div style="margin-bottom:10px;"><button class="btn btn-success" onclick="exportSynthese('${direction}', ${onlyChecked})">📊 Exporter synthèse Excel</button></div>
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">Synthèse ${onlyChecked ? 'des biens cochés' : 'des biens non cochés'}</h3>
+      <button class="btn btn-export" onclick="exportSynthese('${direction}', ${onlyChecked})">📊 Exporter cette synthèse en Excel</button>
+    </div>
     <div class="table-wrapper">
       <table class="patrimoine-table">
         <thead><tr><th>Code matière</th><th>Désignation</th><th style="background:#10b981;">Bon</th><th style="background:#f59e0b;">Passable</th><th style="background:#ef4444;">En panne</th><th style="background:#7c2d12;">Mauvais</th><th style="background:#1e3a8a; color:white;">Total</th></tr></thead>
@@ -844,7 +960,10 @@ function renderConfrontation(direction, containerId) {
   }
   
   container.innerHTML = `
-    <h3 style="color:var(--primary); margin-bottom:15px;">⚖️ Confrontation - ${direction}</h3>
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">️ Confrontation - ${direction}</h3>
+      <button class="btn btn-export" onclick="exportConfrontation('${direction}')">📊 Exporter la confrontation en Excel</button>
+    </div>
     <div class="dashboard-grid">
       <div class="stat-card" style="background:#fee2e2;"><h4>❌ Biens manquants</h4><div class="value">${biensImportesNonCoches.length}</div></div>
       <div class="stat-card" style="background:#d1fae5;"><h4>✅ Biens existants</h4><div class="value">${biensImportesCoches.length}</div></div>
@@ -853,10 +972,7 @@ function renderConfrontation(direction, containerId) {
     </div>
     <div class="confrontation-section section-manquants"><h4>❌ Biens manquants (non cochés)</h4>${genererListeBiens(biensImportesNonCoches)}</div>
     <div class="confrontation-section section-existants"><h4>✅ Biens existants (cochés)</h4>${genererListeBiens(biensImportesCoches)}</div>
-    <div class="confrontation-section section-saisies"><h4>🆕 Nouvelles saisies</h4>${genererListeBiens(biensSaisis)}</div>
-    <div style="margin-top:15px;">
-      <button class="btn btn-success" onclick="exportConfrontation('${direction}')">📊 Exporter confrontation Excel</button>
-    </div>`;
+    <div class="confrontation-section section-saisies"><h4>🆕 Nouvelles saisies</h4>${genererListeBiens(biensSaisis)}</div>`;
 }
 
 function exportConfrontation(direction) {
@@ -876,7 +992,10 @@ function renderReformes(direction, containerId) {
   const container = document.getElementById(containerId);
   const biens = DB.biens.filter(b => b.direction === direction && b.reforme);
   container.innerHTML = `
-    <div style="margin-bottom:10px;"><button class="btn btn-success" onclick="exportReformes('${direction}')">📊 Exporter réformes Excel</button></div>
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">🔄 Biens proposés à la réforme</h3>
+      <button class="btn btn-export" onclick="exportReformes('${direction}')">📊 Exporter les réformes en Excel</button>
+    </div>
     <div class="table-wrapper">
       <table class="patrimoine-table">
         <thead><tr>${COLONNES.map(c=>`<th>${c}</th>`).join('')}<th>ACTIONS</th></tr></thead>
@@ -907,7 +1026,7 @@ function renderGeneralList() {
   const content = document.getElementById('contentArea');
   const biens = DB.biens.filter(b => !b.reforme);
   content.innerHTML = `
-    <h2 style="color:var(--primary); margin-bottom:15px;">📋 Liste générale des biens</h2>
+    <h2 style="color:var(--primary); margin-bottom:15px;"> Liste générale des biens</h2>
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="showSubTab('general', 'liste', this)">📋 Liste générale</button>
       <button class="sub-tab-btn" onclick="showSubTab('general', 'synthese', this)">📊 Synthèse générale</button>
@@ -918,19 +1037,42 @@ function renderGeneralList() {
     <div class="sub-content" id="general_confrontation"></div>`;
   const cListe = document.getElementById('general_liste');
   cListe.innerHTML = `
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">Liste complète de tous les biens</h3>
+      <button class="btn btn-export" onclick="exportGeneralList()">📊 Exporter la liste générale en Excel</button>
+    </div>
     <div class="search-bar">
       <input type="text" id="general_search_code" placeholder="Code" maxlength="6" oninput="filterTable('general_liste')" style="width:80px;">
       <input type="text" id="general_search_annee" placeholder="Année" maxlength="4" oninput="filterTable('general_liste')" style="width:70px;">
       <input type="text" id="general_search_numero" placeholder="Numéro" maxlength="4" oninput="filterTable('general_liste')" style="width:70px;">
-      <input type="text" id="general_search_general" placeholder="🔍 Recherche..." oninput="filterTable('general_liste')" style="flex:1;">
+      <input type="text" id="general_search_general" placeholder=" Recherche..." oninput="filterTable('general_liste')" style="flex:1;">
       <div class="search-count" id="general_search_count">${biens.length} bien(s)</div>
       <button class="btn" style="background:#6b7280; color:white;" onclick="chooseColumns('general_liste')">👁️ Colonnes</button>
     </div>
-    <div class="table-wrapper"><table class="patrimoine-table" id="general_liste_table"><thead><tr id="general_liste_table_head"></tr></thead><tbody id="general_liste_table_body"></tbody></table></div>`;
+    <div class="table-wrapper"><table class="patrimoine-table" id="general_liste_table"><thead><tr id="general_liste_table_head"></tr></thead><tbody id="general_liste_table_body"></tbody></table></div>
+    <div class="pagination-controls" id="general_liste_pagination"></div>`;
   cListe.dataset.biens = JSON.stringify(biens);
   if (!window.visibleCols['general_liste']) window.visibleCols['general_liste'] = [...COLONNES, 'ACTIONS'];
-  fillTableHead('general_liste'); fillTableBody('general_liste', biens);
+  fillTableHead('general_liste'); 
+  paginationState['general_liste'] = { page: 1, pageSize: 100, total: biens.length };
+  renderPaginatedTable('general_liste', biens);
   renderGeneralSynthese(); renderGeneralConfrontation();
+}
+
+function exportGeneralList() {
+  showLoading('Préparation de l\'export Excel...');
+  setTimeout(() => {
+    const biens = DB.biens.filter(b => !b.reforme);
+    const exportCols = [...COLONNES, 'DIRECTION'];
+    if (biens.length > 10000) {
+      exportLargeDataset(biens.map(b => { const obj = {}; exportCols.forEach(c => obj[c] = b[c] || ''); return obj; }), 'Liste_Generale_Complete');
+    } else {
+      const rows = [exportCols];
+      biens.forEach(b => rows.push(exportCols.map(c => b[c] || '')));
+      downloadExcel(rows, 'Liste_Generale_Complete');
+    }
+    hideLoading();
+  }, 100);
 }
 
 function renderGeneralSynthese() {
@@ -947,7 +1089,10 @@ function renderGeneralSynthese() {
   });
   const rows = Object.values(synth);
   c.innerHTML = `
-    <button class="btn btn-success" onclick="exportGeneralSynthese()">📊 Exporter synthèse générale Excel</button>
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="color:var(--primary); font-size:14px;">Synthèse générale par code matière</h3>
+      <button class="btn btn-export" onclick="exportGeneralSynthese()">📊 Exporter la synthèse générale en Excel</button>
+    </div>
     <div class="table-wrapper" style="margin-top:10px;">
       <table class="patrimoine-table">
         <thead><tr><th>Code</th><th>Désignation</th><th style="background:#10b981;">Bon</th><th style="background:#f59e0b;">Passable</th><th style="background:#ef4444;">En panne</th><th style="background:#7c2d12;">Mauvais</th><th style="background:#1e3a8a; color:white;">Total</th></tr></thead>
@@ -964,14 +1109,14 @@ function renderGeneralConfrontation() {
   const biensImportesNonCoches = biensImportes.filter(b => !b.checked);
   const biensSaisis = tousBiens.filter(b => b.source === 'saisie' || !b.source);
   
-  let html = '<h3 style="color:var(--primary); margin-bottom:15px;">⚖️ Confrontation générale</h3>';
+  let html = '<div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><h3 style="color:var(--primary); font-size:14px;">⚖️ Confrontation générale</h3>';
+  html += '<button class="btn btn-export" onclick="exportConfrontationAll()">📊 Exporter la confrontation complète en Excel</button></div>';
   html += `<div class="dashboard-grid">
     <div class="stat-card" style="background:#fee2e2;"><h4>📉 Biens manquants</h4><div class="value">${biensImportesNonCoches.length}</div></div>
     <div class="stat-card" style="background:#d1fae5;"><h4>✅ Biens existants</h4><div class="value">${biensImportesCoches.length}</div></div>
-    <div class="stat-card" style="background:#cffafe;"><h4>🆕 Nouvelles saisies</h4><div class="value">${biensSaisis.length}</div></div>
+    <div class="stat-card" style="background:#cffafe;"><h4> Nouvelles saisies</h4><div class="value">${biensSaisis.length}</div></div>
     <div class="stat-card" style="background:#dbeafe;"><h4>📦 Total importés</h4><div class="value">${biensImportes.length}</div></div>
   </div>`;
-  html += '<div style="margin-top:15px;"><button class="btn btn-info" onclick="exportConfrontationAll()">📊 Exporter confrontation complète Excel</button></div>';
   c.innerHTML = html;
 }
 
@@ -1035,12 +1180,7 @@ function addUser() {
 }
 
 async function saveNewUser() {
-  const u = {
-    nom: document.getElementById('u_nom').value, prenom: document.getElementById('u_prenom').value,
-    username: document.getElementById('u_username').value, password: document.getElementById('u_password').value,
-    type: document.getElementById('u_type').value,
-    directions: [...document.querySelectorAll('.u_dir:checked')].map(c => c.value)
-  };
+  const u = { nom: document.getElementById('u_nom').value, prenom: document.getElementById('u_prenom').value, username: document.getElementById('u_username').value, password: document.getElementById('u_password').value, type: document.getElementById('u_type').value, directions: [...document.querySelectorAll('.u_dir:checked')].map(c => c.value) };
   if (!u.username || !u.password) { alert('Username et mot de passe requis'); return; }
   if (DB.users.find(x => x.username === u.username)) { alert('Username déjà existant'); return; }
   DB.users.push(u); await saveDB(); closeModal('userModal'); renderUsersList(); buildTabs();
@@ -1087,7 +1227,7 @@ function renderRefImport(containerId, key, label) {
   const preview = (Array.isArray(data) ? data : Object.entries(data).map(([k,v]) => k + ' → ' + v)).slice(0, 50);
   c.innerHTML = `
     <p><b>${label}</b> - ${count} entrée(s)</p>
-    <label class="btn btn-success" style="display:inline-block;">📥 Importer Excel<input type="file" accept=".xlsx,.xls" onchange="importRef(event, '${key}')" style="display:none;"></label>
+    <label class="btn btn-success" style="display:inline-block;"> Importer Excel<input type="file" accept=".xlsx,.xls" onchange="importRef(event, '${key}')" style="display:none;"></label>
     <button class="btn btn-delete" onclick="clearRef('${key}')">🗑️ Vider</button>
     <div class="table-wrapper" style="margin-top:10px; max-height:300px;">
       <table class="patrimoine-table"><thead><tr><th>Entrée</th></tr></thead><tbody>${preview.map(v => `<tr><td>${v}</td></tr>`).join('')}</tbody></table>
@@ -1262,10 +1402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function saveNewBien(force = false) {
   const codeMat = document.getElementById('codePreview').textContent;
   const free = document.getElementById('freeCodeMat').checked;
-  if (!free && (codeMat === '—' || !codeMat)) {
-    alert('Veuillez compléter la saisie du Numéro (4 caractères) pour générer le code matière.');
-    document.getElementById('newNumero').focus(); return;
-  }
+  if (!free && (codeMat === '—' || !codeMat)) { alert('Veuillez compléter la saisie du Numéro (4 caractères).'); document.getElementById('newNumero').focus(); return; }
   const finalCode = free ? document.getElementById('newCodeMat').value : codeMat;
   if (!finalCode) { alert('Code matière invalide'); return; }
   if (!force && DB.biens.some(b => b['CODE MATIERE'] === finalCode)) { document.getElementById('duplicateWarning').style.display = 'block'; return; }
@@ -1343,7 +1480,7 @@ async function deleteBien(id, btnElement) {
 }
 
 async function deleteAllBiens(direction) {
-  if (!isAdmin()) { alert('⛔ La suppression de tous les biens est réservée aux administrateurs.'); return; }
+  if (!isAdmin()) { alert(' La suppression de tous les biens est réservée aux administrateurs.'); return; }
   if (!confirm('Supprimer TOUS les biens de ' + direction + ' ?')) return;
   if (!confirm('Êtes-vous vraiment sûr ?')) return;
   DB.biens = DB.biens.filter(b => b.direction !== direction);
@@ -1372,7 +1509,7 @@ function openImport(direction) {
 }
 
 async function processImport() {
-  if (!isAdmin()) { alert('⛔ L\'importation de fichiers Excel est réservée aux administrateurs.'); return; }
+  if (!isAdmin()) { alert(' L\'importation de fichiers Excel est réservée aux administrateurs.'); return; }
   const file = document.getElementById('importFile').files[0];
   const sheet = document.getElementById('importSheet').value;
   const dir = document.getElementById('importDirection').value;
@@ -1417,7 +1554,7 @@ function exportSynthese(direction, onlyChecked) {
   });
   const rows = [['Code','Désignation','Bon','Passable','En panne','Mauvais','Total']];
   Object.values(synth).forEach(r => rows.push([r.code, r.designation, r.Bon, r.Passable, r['En panne'], r.Mauvais, r.total]));
-  downloadExcel(rows, 'Synthese_' + direction.replace(/\s/g, '_'));
+  downloadExcel(rows, 'Synthese_' + (onlyChecked ? 'Coches_' : 'NonCoches_') + direction.replace(/\s/g, '_'));
 }
 
 function exportGeneralSynthese() {
@@ -1446,14 +1583,14 @@ function exportReformes(direction) {
 function downloadExcel(rows, filename) {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:11},{wch:20},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+  ws['!cols'] = [{wch:15},{wch:30},{wch:15},{wch:5},{wch:12},{wch:12},{wch:8},{wch:20},{wch:20},{wch:30},{wch:12}];
   const range = XLSX.utils.decode_range(ws['!ref']);
   for (let C = range.s.c; C <= range.e.c; ++C) {
     const address = XLSX.utils.encode_col(C) + "1";
     if (!ws[address]) continue;
     ws[address].s = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1E3A8A" } }, alignment: { horizontal: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
   }
-  XLSX.utils.book_append_sheet(wb, ws, 'Synthèse');
+  XLSX.utils.book_append_sheet(wb, ws, 'Export');
   XLSX.writeFile(wb, filename + '.xlsx');
 }
 
@@ -1531,22 +1668,14 @@ document.addEventListener('keydown', e => {
   try {
     await openIDB();
     await loadFromIDB();
-    
-    // Initialiser Supabase de manière sécurisée avec vos identifiants
     initSupabase();
-    
-    // Si connecté, tenter de récupérer les dernières données du cloud
-    if (supabase) {
-      await loadFromSupabase();
-    }
-    
-    // Vérifier si une session est déjà active
+    if (supabase) await loadFromSupabase();
     const savedUser = sessionStorage.getItem('infpe_current_user');
     if (savedUser) {
       DB.currentUser = JSON.parse(savedUser);
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-      document.getElementById('currentUserDisplay').textContent = '👤 ' + DB.currentUser.prenom + ' ' + DB.currentUser.nom + ' (' + DB.currentUser.type + ')';
+      document.getElementById('currentUserDisplay').textContent = ' ' + DB.currentUser.prenom + ' ' + DB.currentUser.nom + ' (' + DB.currentUser.type + ')';
       initApp();
     }
   } catch(e) {
