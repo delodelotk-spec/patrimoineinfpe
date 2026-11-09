@@ -10,24 +10,62 @@
 :root { --primary: #1e3a8a; --primary-light: #3b82f6; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; --info: #06b6d4; --bg: #f0f4f8; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12px; background: var(--bg); color: #1a202c; }
+
+/* ===== INFOBULES (TOOLTIPS) : Taille 13pt, Fond bleu clair, LARGEUR ÉLARGIE, SANS POINTILLÉS ===== */
 [data-tooltip] { position: relative; cursor: help; }
-[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: #1e3a8a; color: white; padding: 8px 12px; border-radius: 6px; font-size: 13px; white-space: normal; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: none; max-width: 320px; text-align: center; line-height: 1.4; }
-[data-tooltip]:hover::before { content: ''; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #1e3a8a; z-index: 10000; pointer-events: none; }
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dbeafe;
+  color: #1e3a8a;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13pt;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  z-index: 10000;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  pointer-events: none;
+  max-width: 600px;
+  min-width: 300px;
+  text-align: left;
+  line-height: 1.6;
+  border: 2px solid #3b82f6;
+  font-weight: 500;
+}
+[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: #dbeafe;
+  z-index: 10000;
+  pointer-events: none;
+}
+
 #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #3b82f6); display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 380px; }
 .login-box h2 { color: var(--primary); margin-bottom: 20px; text-align: center; font-size: 18px; }
 .login-box input { width: 100%; padding: 10px; margin: 8px 0; border: 2px solid var(--primary); border-radius: 4px; font-size: 12px; }
 .login-box button { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; }
 .login-box button:hover { background: var(--primary-light); }
+
 #appHeader { background: var(--primary); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
 #appHeader h1 { font-size: 16px; }
-#appHeader .user-info { display: flex; gap: 10px; align-items: center; }
+#appHeader .user-info { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 #appHeader button { background: var(--primary-light); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 #appHeader button:hover { background: #2563eb; }
+
 #tabsContainer { background: white; border-bottom: 2px solid var(--primary); display: flex; flex-wrap: wrap; padding: 0 10px; overflow-x: auto; }
 .tab-btn { padding: 10px 14px; background: transparent; border: none; cursor: pointer; font-size: 12px; color: var(--primary); border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
 .tab-btn:hover { background: #e0e7ff; }
 .tab-btn.active { background: var(--primary); color: white; border-bottom: 3px solid var(--warning); font-weight: bold; }
+
 #contentArea { padding: 15px; height: calc(100vh - 110px); overflow: auto; position: relative; border-top: 4px solid transparent; }
 @keyframes slideRight { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideLeft { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -41,15 +79,15 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12px; background:
 .anim-slideUp { animation: slideUp 0.4s ease; }
 .anim-zoomOut { animation: zoomOut 0.4s ease; }
 .anim-zoomIn { animation: zoomIn 0.4s ease; }
-@keyframes deleteRow { 0% { background-color: #fee2e2; opacity: 1; transform: translateX(0); } 50% { background-color: #fecaca; opacity: 0.7; transform: translateX(-20px); } 100% { background-color: transparent; opacity: 0; transform: translateX(-100%); height: 0; padding: 0; margin: 0; } }
-.row-deleting { animation: deleteRow 0.6s ease forwards; overflow: hidden; }
+
 table.patrimoine-table { width: 100%; border-collapse: collapse; background: white; font-size: 12px; border: 2px solid red; }
 table.patrimoine-table thead { position: sticky; top: 0; background: var(--primary); color: white; z-index: 5; }
 table.patrimoine-table th { padding: 8px; border: 1px solid black; text-align: left; font-weight: bold; font-size: 12px; }
 table.patrimoine-table td { padding: 6px 8px; border: 1px solid black; font-size: 12px; transition: all 0.3s; }
 table.patrimoine-table tr:nth-child(even) { background: #f9fafb; }
 table.patrimoine-table tr:hover { background: #dbeafe; }
-.table-wrapper { max-height: calc(100vh - 300px); overflow: auto; border: 2px solid red; }
+.table-wrapper { max-height: calc(100vh - 320px); overflow: auto; border: 2px solid red; }
+
 .btn { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin: 1px; color: white; }
 .btn-edit { background: var(--warning); color: #1a202c; }
 .btn-delete { background: var(--danger); }
@@ -58,15 +96,19 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .btn-success { background: var(--success); padding: 8px 16px; }
 .btn-info { background: var(--info); padding: 8px 16px; }
 .btn-export { background: #059669; padding: 6px 12px; }
+.btn-close-modal { background: #6b7280; padding: 8px 16px; }
 .btn:hover { opacity: 0.85; }
+
 .search-bar { display: flex; gap: 10px; flex-wrap: wrap; padding: 10px; background: white; border: 2px solid red; border-radius: 4px; margin-bottom: 10px; }
 .search-bar input, .search-bar select { padding: 6px; border: 2px solid var(--primary); border-radius: 4px; font-size: 12px; }
 .search-count { padding: 6px 12px; background: var(--success); color: white; border-radius: 4px; font-weight: bold; font-size: 12px; }
+
 .sub-tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 2px solid var(--primary); flex-wrap: wrap; }
 .sub-tab-btn { padding: 8px 14px; background: #e0e7ff; border: none; cursor: pointer; font-size: 12px; color: var(--primary); border-radius: 4px 4px 0 0; }
 .sub-tab-btn.active { background: var(--primary); color: white; font-weight: bold; }
 .sub-content { display: none; }
 .sub-content.active { display: block; }
+
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
 .modal-overlay.show { display: flex; }
 .modal { background: white; border-radius: 8px; min-width: 600px; max-width: 95vw; max-height: 90vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.4); position: absolute; }
@@ -80,9 +122,11 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: 8px; margin-top: 4px; border: 2px solid var(--primary); border-radius: 4px; font-size: 12px; background: white; }
 .modal-body input:focus, .modal-body select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
 .modal-footer { padding: 15px 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 10px; }
+
 .checkbox-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
 .checkbox-grid label { display: flex; align-items: center; gap: 5px; padding: 6px 10px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 12px; }
 .checkbox-grid input[type="checkbox"] { width: auto; margin: 0; }
+
 .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
 .stat-card { background: white; padding: 20px; border-radius: 8px; border: 2px solid red; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .stat-card h4 { color: var(--primary); font-size: 13px; margin-bottom: 10px; }
@@ -94,6 +138,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .bar-fill { width: 100%; background: linear-gradient(to top, #1e3a8a, #3b82f6); transition: height 1.5s ease-out; border-radius: 3px 3px 0 0; }
 .bar-label { font-size: 10px; margin-top: 4px; text-align: center; word-break: break-word; }
 .bar-value { font-size: 10px; font-weight: bold; color: var(--primary); }
+
 .confrontation-section { background: white; border: 2px solid var(--primary); border-radius: 8px; padding: 15px; margin: 15px 0; }
 .confrontation-section h4 { margin-bottom: 10px; font-size: 14px; }
 .section-manquants { border-color: var(--danger); }
@@ -102,30 +147,137 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 .section-existants h4 { color: var(--success); }
 .section-saisies { border-color: var(--info); }
 .section-saisies h4 { color: var(--info); }
-.section-synthese { border-color: var(--primary); }
-.section-synthese h4 { color: var(--primary); }
-.badge-count { display: inline-block; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 14px; margin-left: 10px; }
-.badge-manquant { background: #fee2e2; color: var(--danger); }
-.badge-existant { background: #d1fae5; color: var(--success); }
-.badge-saisie { background: #cffafe; color: var(--info); }
-.item-list { max-height: 300px; overflow: auto; margin-top: 10px; }
-.item-row { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; font-size: 11px; display: flex; justify-content: space-between; }
-.item-row:nth-child(even) { background: #f9fafb; }
-.item-row:hover { background: #dbeafe; }
-.item-code { font-family: monospace; font-weight: bold; color: var(--primary); }
-.item-designation { flex: 1; margin: 0 10px; }
-.item-etat { font-weight: bold; }
-.supabase-config { background: #eff6ff; border: 2px solid var(--primary-light); border-radius: 8px; padding: 15px; margin: 10px 0; }
+
 .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; }
 .status-connected { background: var(--success); color: white; }
 .status-disconnected { background: var(--danger); color: white; }
 .storage-indicator { background: #e0e7ff; padding: 8px 12px; border-radius: 4px; font-size: 11px; margin-left: 10px; }
-.pagination-controls { display: flex; justify-content: center; gap: 10px; margin: 15px 0; align-items: center; }
+
+.pagination-controls { display: flex; justify-content: center; gap: 10px; margin: 15px 0; align-items: center; flex-wrap: wrap; }
 .pagination-controls button { padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; }
 .pagination-controls button:disabled { background: #9ca3af; cursor: not-allowed; }
 .pagination-controls span { font-weight: bold; }
 .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 99999; color: white; font-size: 16px; }
 .loading-overlay.show { display: flex; }
+
+@keyframes deleteRow { 0% { background-color: #fee2e2; opacity: 1; } 100% { background-color: transparent; opacity: 0; } }
+.row-deleting { animation: deleteRow 0.6s ease forwards; }
+
+/* ===== STYLES SPÉCIFIQUES POUR LES ONGLETS RÉSUMÉ (OPTIMISÉ SMARTPHONE) ===== */
+.resume-container {
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+.resume-select {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--primary);
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+.resume-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 2px solid red;
+  border-radius: 6px;
+  margin-top: 10px;
+  max-width: 100%;
+}
+.resume-table {
+  width: 100%;
+  min-width: 150px;
+  border-collapse: collapse;
+  background: white;
+  font-size: 11px;
+  table-layout: fixed;
+}
+.resume-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--primary);
+  color: white;
+  z-index: 5;
+}
+.resume-table th {
+  padding: 6px 4px;
+  border: 1px solid black;
+  text-align: left;
+  font-weight: bold;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.resume-table th.col-designation { width: 70%; min-width: 80px; }
+.resume-table th.col-quantite { width: 30%; min-width: 40px; text-align: center; }
+.resume-table td {
+  padding: 5px 4px;
+  border: 1px solid black;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.resume-table td.col-designation {
+  max-width: 0;
+}
+.resume-table td.col-quantite {
+  text-align: center;
+  font-weight: bold;
+  background: #f0f9ff;
+  width: 50px;
+}
+.resume-table tr:nth-child(even) { background: #f9fafb; }
+.resume-table tr:hover { background: #dbeafe; }
+.resume-count-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 8px;
+}
+@media (max-width: 600px) {
+  .resume-table { font-size: 10px; }
+  .resume-table th { padding: 5px 3px; font-size: 10px; }
+  .resume-table td { padding: 4px 3px; font-size: 10px; }
+  .resume-select { font-size: 13px; padding: 8px 10px; }
+}
+
+/* ===== MODAL DÉTAILS ===== */
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.details-table th {
+  background: var(--primary);
+  color: white;
+  padding: 8px;
+  border: 1px solid black;
+  text-align: left;
+  font-size: 12px;
+}
+.details-table td {
+  padding: 6px 8px;
+  border: 1px solid black;
+  font-size: 12px;
+}
+.details-table tr:nth-child(even) {
+  background: #f9fafb;
+}
 </style>
 </head>
 <body>
@@ -139,7 +291,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
 
 <div id="loginScreen">
   <div class="login-box">
-    <h2> INFPE - Gestion du Patrimoine</h2>
+    <h2>🏛️ INFPE - Gestion du Patrimoine</h2>
     <input type="text" id="loginUser" placeholder="Nom d'utilisateur" autocomplete="off">
     <input type="password" id="loginPass" placeholder="Mot de passe">
     <button onclick="doLogin()">Se connecter</button>
@@ -163,7 +315,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
   <div id="contentArea"></div>
 </div>
 
-<!-- Modals -->
+<!-- MODAL AJOUT BIEN -->
 <div class="modal-overlay" id="addBienModal">
   <div class="modal" style="width:950px;">
     <div class="modal-header"><h3>➕ Ajouter un nouveau bien</h3><button class="modal-close" onclick="closeModal('addBienModal')">×</button></div>
@@ -214,6 +366,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
   </div>
 </div>
 
+<!-- MODAL EDIT -->
 <div class="modal-overlay" id="editBienModal">
   <div class="modal" style="width:700px;">
     <div class="modal-header"><h3>✏️ Modifier le bien</h3><button class="modal-close" onclick="closeModal('editBienModal')">×</button></div>
@@ -225,6 +378,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
   </div>
 </div>
 
+<!-- MODAL PASSWORD -->
 <div class="modal-overlay" id="passwordModal">
   <div class="modal" style="width:400px;">
     <div class="modal-header"><h3>🔑 Changer le mot de passe</h3><button class="modal-close" onclick="closeModal('passwordModal')">×</button></div>
@@ -237,31 +391,35 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
   </div>
 </div>
 
+<!-- MODAL CLOUD -->
 <div class="modal-overlay" id="cloudModal">
   <div class="modal" style="width:700px; max-height:80vh; overflow:auto;">
-    <div class="modal-header"><h3>☁️ Synchronisation Cloud</h3><button class="modal-close" onclick="closeModal('cloudModal')">×</button></div>
+    <div class="modal-header"><h3>☁️ Synchronisation Cloud (Netlify + Supabase)</h3><button class="modal-close" onclick="closeModal('cloudModal')">×</button></div>
     <div class="modal-body">
       <div style="padding:15px; background:#fef3c7; border:2px solid var(--warning); border-radius:6px; margin-bottom:15px; font-size:12px;">
-        <b>📌 Important :</b> La synchronisation est automatique et perpétuelle. Vos identifiants sont pré-configurés.
+        <b>📌 Important :</b> Netlify est un hébergeur statique. Pour que les données soient accessibles depuis n'importe quel ordinateur, configurez Supabase ci-dessous. La synchronisation est automatique et perpétuelle.
       </div>
       <div class="supabase-config">
         <h4 style="color:var(--primary); margin-bottom:10px; font-size:14px;">⚙️ Configuration Supabase</h4>
-        <label>URL du projet Supabase</label><input type="text" id="supabaseUrl">
-        <label>Clé publique (Anon Key)</label><input type="text" id="supabaseKey">
+        <label>URL du projet Supabase</label><input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
+        <label>Clé publique (Anon Key)</label><input type="text" id="supabaseKey" placeholder="eyJhbGciOi...">
         <div style="margin-top:15px;">
           <button class="btn btn-primary" onclick="testAndSaveSupabase()">🔗 Tester et enregistrer</button>
+          <button class="btn btn-info" onclick="autoFillSupabase()">📝 Remplissage auto</button>
         </div>
         <div id="supabaseTestResult" style="margin-top:10px; font-size:12px;"></div>
       </div>
       <div style="margin-top:20px; padding:15px; background:#e0e7ff; border-radius:6px;">
         <button class="btn btn-primary" onclick="exportAllData()" style="width:100%; margin-bottom:10px;">📥 Exporter toutes les données (JSON)</button>
         <label class="btn btn-success" style="width:100%; text-align:center; display:block; margin-bottom:10px;">📤 Importer des données (JSON)<input type="file" accept=".json" onchange="importAllData(event)" style="display:none;"></label>
-        <button class="btn btn-info" onclick="syncToSupabase()" style="width:100%;">🔄 Forcer la synchronisation maintenant</button>
+        <button class="btn btn-edit" onclick="exportExcelPatrimoine()" style="width:100%; margin-bottom:10px;">📊 Exporter vers Excel "Patrimoine.xlsx"</button>
+        <button class="btn btn-info" onclick="syncToSupabase()" style="width:100%;">🔄 Synchroniser avec Supabase maintenant</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- MODAL USER -->
 <div class="modal-overlay" id="userModal">
   <div class="modal" style="width:700px;">
     <div class="modal-header"><h3>👤 Gestion des utilisateurs</h3><button class="modal-close" onclick="closeModal('userModal')">×</button></div>
@@ -269,6 +427,7 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
   </div>
 </div>
 
+<!-- MODAL IMPORT -->
 <div class="modal-overlay" id="importModal">
   <div class="modal" style="width:500px;">
     <div class="modal-header"><h3>📥 Importer un fichier Excel</h3><button class="modal-close" onclick="closeModal('importModal')">×</button></div>
@@ -278,6 +437,22 @@ table.patrimoine-table tr:hover { background: #dbeafe; }
       <label>Direction cible</label><select id="importDirection"></select>
     </div>
     <div class="modal-footer"><button class="btn btn-primary" onclick="processImport()">Importer</button></div>
+  </div>
+</div>
+
+<!-- NOUVEAU MODAL : DÉTAILS D'UNE DÉSIGNATION -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal" style="width:900px;">
+    <div class="modal-header">
+      <h3 id="detailsModalTitle">📋 Détails de la désignation</h3>
+      <button class="modal-close" onclick="closeModal('detailsModal')">×</button>
+    </div>
+    <div class="modal-body" id="detailsModalBody">
+      <div id="detailsContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-close-modal" onclick="closeModal('detailsModal')">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -323,7 +498,7 @@ let paginationState = {};
 const DEFAULT_SUPABASE_URL = 'https://jpzbdhmktvbwzhhmxmaz.supabase.co';
 const DEFAULT_SUPABASE_KEY = 'sb_publishable_JbAgx2R8-dg3Uk-27Tr4Zw_lRFAP-wu';
 const DB_NAME = 'infpe_patrimoine';
-const PAGE_SIZE = 1000; // Charger par lots de 1000 pour gérer 10 Go
+const PAGE_SIZE = 1000;
 let idb = null;
 
 function isAdmin() { return DB.currentUser && DB.currentUser.type === 'Administrateur'; }
@@ -332,10 +507,7 @@ function showLoading(text = 'Veuillez patienter...') {
   document.getElementById('loadingText').textContent = text;
   document.getElementById('loadingOverlay').classList.add('show');
 }
-
-function hideLoading() {
-  document.getElementById('loadingOverlay').classList.remove('show');
-}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
 
 function updateStorageIndicator() {
   const size = JSON.stringify(DB).length;
@@ -411,7 +583,6 @@ function triggerBackgroundSync() {
 async function syncToSupabaseBackground() {
   if (!supabase) return;
   try {
-    // Synchronisation par lots pour gérer 10 Go
     const batchSize = 100;
     for (let i = 0; i < DB.biens.length; i += batchSize) {
       const batch = DB.biens.slice(i, i + batchSize);
@@ -425,14 +596,13 @@ async function syncToSupabaseBackground() {
     for (const ref of refsToSync) await supabase.from('refs').upsert(ref, { onConflict: 'key' });
     if (DB.logo) await supabase.from('settings').upsert({ key: 'logo', value: DB.logo }, { onConflict: 'key' });
     updateSupabaseStatus(true);
-  } catch(e) { console.warn('️ Erreur de synchronisation:', e.message); updateSupabaseStatus(false); }
+  } catch(e) { console.warn('⚠️ Erreur de synchronisation:', e.message); updateSupabaseStatus(false); }
 }
 
 async function loadFromSupabase() {
   if (!supabase) return false;
   try {
     showLoading('Chargement depuis le cloud...');
-    // Chargement paginé pour gérer 10 Go
     let allBiens = [];
     let from = 0;
     let to = PAGE_SIZE - 1;
@@ -445,15 +615,11 @@ async function loadFromSupabase() {
         from += PAGE_SIZE;
         to += PAGE_SIZE;
         if (biens.length < PAGE_SIZE) hasMore = false;
-      } else {
-        hasMore = false;
-      }
+      } else { hasMore = false; }
     }
     if (allBiens.length > 0) DB.biens = allBiens;
-    
     const { data: users, error: errUsers } = await supabase.from('users').select('*');
     if (!errUsers && users && users.length > 0) DB.users = users;
-    
     const { data: refs, error: errRefs } = await supabase.from('refs').select('*');
     if (!errRefs && refs && refs.length > 0) {
       refs.forEach(r => {
@@ -463,18 +629,12 @@ async function loadFromSupabase() {
         else if (r.key === 'modeles') DB.modeles = r.value || [];
       });
     }
-    
     const { data: settings, error: errSettings } = await supabase.from('settings').select('*');
     if (!errSettings && settings && settings.length > 0) settings.forEach(s => { if (s.key === 'logo') DB.logo = s.value; });
-    
     await saveDB();
     hideLoading();
     return true;
-  } catch(e) { 
-    console.warn('Erreur de chargement depuis Supabase:', e); 
-    hideLoading();
-    return false; 
-  }
+  } catch(e) { console.warn('Erreur chargement Supabase:', e); hideLoading(); return false; }
 }
 
 async function doLogin() {
@@ -511,7 +671,7 @@ function initSupabase() {
   if (typeof window.supabase === 'undefined') { console.error('❌ La bibliothèque Supabase ne s\'est pas chargée.'); updateSupabaseStatus(false); return false; }
   const url = localStorage.getItem('supabase_url') || DEFAULT_SUPABASE_URL;
   const key = localStorage.getItem('supabase_key') || DEFAULT_SUPABASE_KEY;
-  if (url && key) {
+  if (url && key && !url.includes('VOTRE_URL')) {
     try { supabase = window.supabase.createClient(url, key); updateSupabaseStatus(true); return true; } 
     catch(e) { updateSupabaseStatus(false); return false; }
   }
@@ -542,6 +702,11 @@ async function testAndSaveSupabase() {
   } catch(e) { resultDiv.innerHTML = `<span style="color:red;">❌ Erreur : ${e.message}</span>`; }
 }
 
+function autoFillSupabase() {
+  document.getElementById('supabaseUrl').value = DEFAULT_SUPABASE_URL;
+  document.getElementById('supabaseKey').value = DEFAULT_SUPABASE_KEY;
+}
+
 async function syncToSupabase() {
   if (!supabase) { alert('Supabase n\'est pas configuré.'); return; }
   showLoading('Synchronisation en cours...');
@@ -559,12 +724,14 @@ function buildTabs() {
   const allowedDirs = user.directions || DIRECTIONS;
   const admin = isAdmin();
   addTabBtn(container, 'dashboard', '📊 Tableau de bord', 'Vue d\'ensemble');
+  addTabBtn(container, 'resume', '📋 Résumé', 'Résumé des biens cochés par désignation');
+  addTabBtn(container, 'resumeNonCoches', '📋 Résumé des biens non cochés', 'Résumé des biens non cochés par désignation');
   allowedDirs.forEach(dir => {
     const id = 'dir_' + dir.replace(/[^a-zA-Z0-9]/g, '_');
     const shortName = dir.length > 30 ? dir.substring(0, 28) + '…' : dir;
     addTabBtn(container, id, '🏢 ' + shortName, 'Gérer les biens de : ' + dir);
   });
-  if (admin) addTabBtn(container, 'general', ' Liste générale', 'Liste complète (Admin)');
+  if (admin) addTabBtn(container, 'general', '📋 Liste générale', 'Liste complète (Admin)');
   if (admin) addTabBtn(container, 'params', '⚙️ Paramètres', 'Configuration (Admin)');
 }
 
@@ -589,6 +756,8 @@ function showTab(tabId) {
   content.style.borderTop = '4px solid ' + color;
   content.className = ''; void content.offsetWidth; content.classList.add(anim);
   if (tabId === 'dashboard') renderDashboard();
+  else if (tabId === 'resume') renderResume();
+  else if (tabId === 'resumeNonCoches') renderResumeNonCoches();
   else if (tabId === 'general') renderGeneralList();
   else if (tabId === 'params') renderParams();
   else if (tabId.startsWith('dir_')) {
@@ -608,6 +777,8 @@ function refreshCurrentView(preserveSearch = true) {
   const savedSearches = {};
   if (preserveSearch) document.querySelectorAll('.search-bar input').forEach(input => { savedSearches[input.id] = input.value; });
   if (currentTab === 'dashboard') renderDashboard();
+  else if (currentTab === 'resume') renderResume();
+  else if (currentTab === 'resumeNonCoches') renderResumeNonCoches();
   else if (currentTab === 'general') renderGeneralList();
   else if (currentTab === 'params') renderParams();
   else if (currentTab.startsWith('dir_')) {
@@ -652,7 +823,7 @@ function renderDashboard() {
       <div class="stat-card"><h4>💾 Stockage utilisé</h4><div class="value" style="font-size:18px;">${(JSON.stringify(DB).length / (1024 * 1024)).toFixed(2)} Mo</div></div>
     </div>
     <div class="chart-container">
-      <h4 style="color:var(--primary); margin-bottom:15px;">📊 Nombre de biens par direction</h4>
+      <h4 style="color:var(--primary); margin-bottom:15px;">📊 Nombre de biens par direction (du plus petit au plus grand)</h4>
       <div class="bar-chart" id="dashChart">
         ${sortedDirs.map(([dir, n]) => {
           const h = (n / maxVal) * 160;
@@ -664,10 +835,294 @@ function renderDashboard() {
   setTimeout(() => { document.querySelectorAll('#dashChart .bar-fill').forEach(bar => { bar.style.height = bar.dataset.target + 'px'; }); }, 100);
 }
 
+// ===== FONCTION POUR AFFICHER LES DÉTAILS D'UNE DÉSIGNATION =====
+function showDesignationDetails(designation, checkedStatus) {
+  // Filtrer les biens correspondant à cette désignation
+  let biens = DB.biens.filter(b => b['DESIGNATION'] === designation && !b.reforme);
+  
+  // Filtrer par statut coché/non coché
+  if (checkedStatus === 'coches') {
+    biens = biens.filter(b => b.checked === true);
+  } else if (checkedStatus === 'nonCoches') {
+    biens = biens.filter(b => b.checked !== true);
+  }
+  
+  if (biens.length === 0) {
+    alert('Aucun bien trouvé pour cette désignation.');
+    return;
+  }
+  
+  // Mettre à jour le titre du modal
+  const statusLabel = checkedStatus === 'coches' ? 'cochés' : 'non cochés';
+  document.getElementById('detailsModalTitle').textContent = `📋 Détails : ${designation} (${biens.length} bien(s) ${statusLabel})`;
+  
+  // Créer le contenu du modal
+  let html = `
+    <div style="margin-bottom:15px;">
+      <p style="font-size:13px; color:#6b7280;"><b>Total : ${biens.length} bien(s)</b></p>
+    </div>
+    <div class="table-wrapper" style="max-height:400px;">
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th>CODE MATIERE</th>
+            <th>DESIGNATION</th>
+            <th>TYPE/MODELE</th>
+            <th>QTE</th>
+            <th>ETAT</th>
+            <th>FORMAT</th>
+            <th>ANNEE D'ACQUISITION</th>
+            <th>BUREAU/SERVICE</th>
+            <th>UTILISATEUR</th>
+            <th>DIRECTION REGIONALE</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  biens.forEach(b => {
+    html += `
+      <tr>
+        <td>${b['CODE MATIERE'] || ''}</td>
+        <td>${b['DESIGNATION'] || ''}</td>
+        <td>${b['TYPE/MODELE'] || ''}</td>
+        <td>${b['QTE'] || ''}</td>
+        <td>${b['ETAT'] || ''}</td>
+        <td>${b['FORMAT'] || ''}</td>
+        <td>${b['ANNEE D\'ACQUISITION'] || ''}</td>
+        <td>${b['BUREAU/SERVICE'] || ''}</td>
+        <td>${b['UTILISATEUR'] || ''}</td>
+        <td>${b['DIRECTION REGIONALE'] || b.direction || ''}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  document.getElementById('detailsContent').innerHTML = html;
+  openModal('detailsModal');
+}
+
+// ===== ONGLET RÉSUMÉ : BIENS COCHÉS =====
+function renderResume() {
+  const content = document.getElementById('contentArea');
+  const userDirs = DB.currentUser?.directions || DIRECTIONS;
+  
+  content.innerHTML = `
+    <div class="resume-container">
+      <h2 style="color:var(--primary); margin-bottom:10px; font-size:16px;">📋 Résumé des biens cochés (existants)</h2>
+      <p style="color:#6b7280; margin-bottom:15px; font-size:12px;">Affiche uniquement les biens cochés comme existants, regroupés par désignation et triés par ordre alphabétique. Passez la souris sur une désignation pour voir le détail par direction. Cliquez sur une désignation pour voir les détails complets.</p>
+      
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:bold; color:var(--primary); display:block; margin-bottom:6px; font-size:13px;">📂 Sélectionner une direction :</label>
+        <select id="resumeDirectionSelect" onchange="updateResumeTable()" class="resume-select">
+          <option value="Tout" selected>Tout</option>
+          ${userDirs.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select>
+        <div id="resumeCountDisplay" style="margin-top:8px; font-size:12px; color:var(--primary); font-weight:bold;"></div>
+      </div>
+      
+      <div class="resume-table-wrapper">
+        <table class="resume-table">
+          <thead>
+            <tr>
+              <th class="col-designation">Désignation</th>
+              <th class="col-quantite">Qté</th>
+            </tr>
+          </thead>
+          <tbody id="resumeTableBody"></tbody>
+        </table>
+      </div>
+      
+      <div id="resumeSummary" style="margin-top:10px; padding:8px; background:#eff6ff; border-radius:4px; font-size:12px; font-weight:bold; color:var(--primary);"></div>
+    </div>
+  `;
+  updateResumeTable();
+}
+
+function updateResumeTable() {
+  const selectEl = document.getElementById('resumeDirectionSelect');
+  if (!selectEl) return;
+  const selectedDir = selectEl.value;
+  
+  let biens = DB.biens.filter(b => b.checked === true && !b.reforme);
+  
+  if (selectedDir !== 'Tout') {
+    biens = biens.filter(b => b.direction === selectedDir);
+  }
+
+  const synth = {};
+  biens.forEach(b => {
+    const des = b['DESIGNATION'] || 'Non spécifié';
+    const qte = parseInt(b['QTE']) || 1;
+    const dir = b.direction;
+    
+    if (!synth[des]) {
+      synth[des] = { total: 0, parDirection: {} };
+    }
+    synth[des].total += qte;
+    if (!synth[des].parDirection[dir]) {
+      synth[des].parDirection[dir] = 0;
+    }
+    synth[des].parDirection[dir] += qte;
+  });
+
+  const rows = Object.entries(synth)
+    .map(([des, data]) => ({ des, total: data.total, parDirection: data.parDirection }))
+    .sort((a, b) => a.des.localeCompare(b.des, 'fr', { sensitivity: 'base' }));
+
+  const tbody = document.getElementById('resumeTableBody');
+  const summaryDiv = document.getElementById('resumeSummary');
+  const countDisplay = document.getElementById('resumeCountDisplay');
+  
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:15px; color:#6b7280; font-style:italic;">Aucun bien coché trouvé</td></tr>';
+    if (summaryDiv) summaryDiv.textContent = '';
+    if (countDisplay) countDisplay.innerHTML = '<span class="resume-count-badge">0 désignation(s)</span>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    let tooltipContent = `Total: ${r.total}\n\n`;
+    const sortedDirs = Object.entries(r.parDirection).sort((a, b) => a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' }));
+    sortedDirs.forEach(([dir, qty]) => {
+      tooltipContent += `${dir}: ${qty}\n`;
+    });
+    
+    const escapedTooltip = tooltipContent.trim().replace(/"/g, '&quot;');
+    
+    return `
+    <tr onclick="showDesignationDetails('${r.des.replace(/'/g, "\\'")}', 'coches')" style="cursor:pointer;">
+      <td class="col-designation" data-tooltip="${escapedTooltip}" title="${escapedTooltip}">${r.des}</td>
+      <td class="col-quantite">${r.total}</td>
+    </tr>
+  `}).join('');
+
+  const totalQte = rows.reduce((sum, r) => sum + r.total, 0);
+  const dirLabel = selectedDir === 'Tout' ? 'toutes les directions' : selectedDir;
+  
+  if (summaryDiv) {
+    summaryDiv.textContent = `📊 Total : ${rows.length} désignation(s) | ${totalQte} bien(s) coché(s) - ${dirLabel}`;
+  }
+  if (countDisplay) {
+    countDisplay.innerHTML = `<span class="resume-count-badge">${rows.length} désignation(s) trouvée(s)</span>`;
+  }
+}
+
+// ===== ONGLET RÉSUMÉ DES BIENS NON COCHÉS =====
+function renderResumeNonCoches() {
+  const content = document.getElementById('contentArea');
+  const userDirs = DB.currentUser?.directions || DIRECTIONS;
+  
+  content.innerHTML = `
+    <div class="resume-container">
+      <h2 style="color:var(--primary); margin-bottom:10px; font-size:16px;">📋 Résumé des biens non cochés</h2>
+      <p style="color:#6b7280; margin-bottom:15px; font-size:12px;">Affiche uniquement les biens NON cochés (non vérifiés), regroupés par désignation et triés par ordre alphabétique. Passez la souris sur une désignation pour voir le détail par direction. Cliquez sur une désignation pour voir les détails complets.</p>
+      
+      <div style="margin-bottom:15px;">
+        <label style="font-weight:bold; color:var(--primary); display:block; margin-bottom:6px; font-size:13px;">📂 Sélectionner une direction :</label>
+        <select id="resumeNonCochesDirectionSelect" onchange="updateResumeNonCochesTable()" class="resume-select">
+          <option value="Tout" selected>Tout</option>
+          ${userDirs.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select>
+        <div id="resumeNonCochesCountDisplay" style="margin-top:8px; font-size:12px; color:var(--primary); font-weight:bold;"></div>
+      </div>
+      
+      <div class="resume-table-wrapper">
+        <table class="resume-table">
+          <thead>
+            <tr>
+              <th class="col-designation">Désignation</th>
+              <th class="col-quantite">Qté</th>
+            </tr>
+          </thead>
+          <tbody id="resumeNonCochesTableBody"></tbody>
+        </table>
+      </div>
+      
+      <div id="resumeNonCochesSummary" style="margin-top:10px; padding:8px; background:#eff6ff; border-radius:4px; font-size:12px; font-weight:bold; color:var(--primary);"></div>
+    </div>
+  `;
+  updateResumeNonCochesTable();
+}
+
+function updateResumeNonCochesTable() {
+  const selectEl = document.getElementById('resumeNonCochesDirectionSelect');
+  if (!selectEl) return;
+  const selectedDir = selectEl.value;
+  
+  let biens = DB.biens.filter(b => b.checked !== true && !b.reforme);
+  
+  if (selectedDir !== 'Tout') {
+    biens = biens.filter(b => b.direction === selectedDir);
+  }
+
+  const synth = {};
+  biens.forEach(b => {
+    const des = b['DESIGNATION'] || 'Non spécifié';
+    const qte = parseInt(b['QTE']) || 1;
+    const dir = b.direction;
+    
+    if (!synth[des]) {
+      synth[des] = { total: 0, parDirection: {} };
+    }
+    synth[des].total += qte;
+    if (!synth[des].parDirection[dir]) {
+      synth[des].parDirection[dir] = 0;
+    }
+    synth[des].parDirection[dir] += qte;
+  });
+
+  const rows = Object.entries(synth)
+    .map(([des, data]) => ({ des, total: data.total, parDirection: data.parDirection }))
+    .sort((a, b) => a.des.localeCompare(b.des, 'fr', { sensitivity: 'base' }));
+
+  const tbody = document.getElementById('resumeNonCochesTableBody');
+  const summaryDiv = document.getElementById('resumeNonCochesSummary');
+  const countDisplay = document.getElementById('resumeNonCochesCountDisplay');
+  
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:15px; color:#6b7280; font-style:italic;">Aucun bien non coché trouvé</td></tr>';
+    if (summaryDiv) summaryDiv.textContent = '';
+    if (countDisplay) countDisplay.innerHTML = '<span class="resume-count-badge">0 désignation(s)</span>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    let tooltipContent = `Total: ${r.total}\n\n`;
+    const sortedDirs = Object.entries(r.parDirection).sort((a, b) => a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' }));
+    sortedDirs.forEach(([dir, qty]) => {
+      tooltipContent += `${dir}: ${qty}\n`;
+    });
+    
+    const escapedTooltip = tooltipContent.trim().replace(/"/g, '&quot;');
+    
+    return `
+    <tr onclick="showDesignationDetails('${r.des.replace(/'/g, "\\'")}', 'nonCoches')" style="cursor:pointer;">
+      <td class="col-designation" data-tooltip="${escapedTooltip}" title="${escapedTooltip}">${r.des}</td>
+      <td class="col-quantite">${r.total}</td>
+    </tr>
+  `}).join('');
+
+  const totalQte = rows.reduce((sum, r) => sum + r.total, 0);
+  const dirLabel = selectedDir === 'Tout' ? 'toutes les directions' : selectedDir;
+  
+  if (summaryDiv) {
+    summaryDiv.textContent = `📊 Total : ${rows.length} désignation(s) | ${totalQte} bien(s) non coché(s) - ${dirLabel}`;
+  }
+  if (countDisplay) {
+    countDisplay.innerHTML = `<span class="resume-count-badge">${rows.length} désignation(s) trouvée(s)</span>`;
+  }
+}
+
 function renderDirectionTab(direction) {
   const content = document.getElementById('contentArea');
   const userDirs = DB.currentUser?.directions || DIRECTIONS;
-  if (!userDirs.includes(direction)) { content.innerHTML = '<p style="color:red; padding:20px;"> Accès non autorisé.</p>'; return; }
+  if (!userDirs.includes(direction)) { content.innerHTML = '<p style="color:red; padding:20px;">⛔ Accès non autorisé.</p>'; return; }
   const tabId = 'dir_' + direction.replace(/[^a-zA-Z0-9]/g, '_');
   const escDir = direction.replace(/'/g, "\\'");
   const admin = isAdmin();
@@ -712,14 +1167,14 @@ function renderBiensList(direction, containerId, filterChecked, checkedValue, ex
   const searchId = containerId + '_search';
   const tableId = containerId + '_table';
   container.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h3 style="color:var(--primary); font-size:14px;">${exportSuffix.replace(/_/g, ' ')}</h3>
       <button class="btn btn-export" onclick="exportBiensList('${direction}', ${filterChecked}, ${checkedValue}, '${exportSuffix}')">📊 Exporter cette liste en Excel</button>
     </div>
     <div class="search-bar">
-      <input type="text" id="${searchId}_code" placeholder="Code" maxlength="6" oninput="filterTable('${containerId}')" style="width:80px;">
-      <input type="text" id="${searchId}_annee" placeholder="Année" maxlength="4" oninput="filterTable('${containerId}')" style="width:70px;">
-      <input type="text" id="${searchId}_numero" placeholder="Numéro" maxlength="4" oninput="filterTable('${containerId}')" style="width:70px;">
+      <input type="text" id="${searchId}_code" placeholder="Code (6 car.)" maxlength="6" oninput="filterTable('${containerId}')" style="width:90px;">
+      <input type="text" id="${searchId}_annee" placeholder="Année (4 car.)" maxlength="4" oninput="filterTable('${containerId}')" style="width:90px;">
+      <input type="text" id="${searchId}_numero" placeholder="Numéro (4 car.)" maxlength="4" oninput="filterTable('${containerId}')" style="width:90px;">
       <input type="text" id="${searchId}_general" placeholder="🔍 Recherche générale..." oninput="filterTable('${containerId}')" style="flex:1; min-width:200px;">
       <div class="search-count" id="${searchId}_count">${biens.length} bien(s)</div>
       <button class="btn btn-primary" onclick="toggleAllCheck('${containerId}')">☑️ Tout cocher/décocher</button>
@@ -733,7 +1188,6 @@ function renderBiensList(direction, containerId, filterChecked, checkedValue, ex
   if (!window.visibleCols) window.visibleCols = {};
   if (!window.visibleCols[containerId]) window.visibleCols[containerId] = [...COLONNES, 'ACTIONS'];
   fillTableHead(containerId); 
-  // Pagination : afficher les 100 premiers par défaut
   paginationState[containerId] = { page: 1, pageSize: 100, total: biens.length };
   renderPaginatedTable(containerId, biens);
 }
@@ -755,11 +1209,11 @@ function renderPaginationControls(containerId, total) {
   const div = document.getElementById(containerId + '_pagination');
   if (!div) return;
   div.innerHTML = `
-    <button onclick="changePage('${containerId}', 1)" ${state.page === 1 ? 'disabled' : ''}> Première</button>
+    <button onclick="changePage('${containerId}', 1)" ${state.page === 1 ? 'disabled' : ''}>⏮ Première</button>
     <button onclick="changePage('${containerId}', ${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>◀ Précédent</button>
     <span>Page ${state.page} sur ${totalPages} (${total} biens)</span>
     <button onclick="changePage('${containerId}', ${state.page + 1})" ${state.page === totalPages ? 'disabled' : ''}>Suivant ▶</button>
-    <button onclick="changePage('${containerId}', ${totalPages})" ${state.page === totalPages ? 'disabled' : ''}>Dernière </button>
+    <button onclick="changePage('${containerId}', ${totalPages})" ${state.page === totalPages ? 'disabled' : ''}>Dernière ⏭</button>
     <select onchange="changePageSize('${containerId}', this.value)">
       <option value="50" ${state.pageSize === 50 ? 'selected' : ''}>50 par page</option>
       <option value="100" ${state.pageSize === 100 ? 'selected' : ''}>100 par page</option>
@@ -792,8 +1246,6 @@ function exportBiensList(direction, filterChecked, checkedValue, suffix) {
   setTimeout(() => {
     let biens = DB.biens.filter(b => b.direction === direction && !b.reforme);
     if (filterChecked !== null) biens = biens.filter(b => b.checked === checkedValue);
-    
-    // Pour les très gros volumes, exporter par lots
     if (biens.length > 10000) {
       exportLargeDataset(biens, `Liste_${suffix}_${direction.replace(/\s/g, '_')}`);
     } else {
@@ -806,7 +1258,6 @@ function exportBiensList(direction, filterChecked, checkedValue, suffix) {
 }
 
 function exportLargeDataset(biens, filename) {
-  // Export par lots pour éviter les problèmes de mémoire
   const wb = XLSX.utils.book_new();
   const batchSize = 5000;
   let sheetNum = 1;
@@ -842,7 +1293,7 @@ function fillTableBody(containerId, biens) {
         html += `<td style="white-space:nowrap;">
           <input type="checkbox" ${b.checked ? 'checked' : ''} onchange="toggleCheck('${b.id}', this.checked)">
           <button class="btn btn-edit" onclick="editBien('${b.id}')">✏️</button>
-          ${admin && !isExistants ? `<button class="btn btn-delete" onclick="deleteBien('${b.id}', this)">️</button>` : ''}
+          ${admin && !isExistants ? `<button class="btn btn-delete" onclick="deleteBien('${b.id}', this)">🗑️</button>` : ''}
           ${!isExistants ? `<button class="btn btn-reforme" onclick="proposeReforme('${b.id}', this)">🔄</button>` : ''}
         </td>`;
       } else { html += `<td>${b[c] || ''}</td>`; }
@@ -876,7 +1327,6 @@ function filterTable(containerId) {
     return true;
   });
   document.getElementById(searchId + '_count').textContent = biens.length + ' bien(s)';
-  // Réinitialiser la pagination après filtrage
   paginationState[containerId] = { page: 1, pageSize: paginationState[containerId]?.pageSize || 100, total: biens.length };
   renderPaginatedTable(containerId, biens);
 }
@@ -934,7 +1384,7 @@ function renderSynthese(direction, containerId, onlyChecked) {
   });
   const rows = Object.values(synth);
   container.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h3 style="color:var(--primary); font-size:14px;">Synthèse ${onlyChecked ? 'des biens cochés' : 'des biens non cochés'}</h3>
       <button class="btn btn-export" onclick="exportSynthese('${direction}', ${onlyChecked})">📊 Exporter cette synthèse en Excel</button>
     </div>
@@ -956,17 +1406,17 @@ function renderConfrontation(direction, containerId) {
   
   function genererListeBiens(biens) {
     if (biens.length === 0) return '<p style="color:#6b7280; padding:10px; text-align:center;">Aucun bien</p>';
-    return `<div class="item-list">${biens.map(b => `<div class="item-row"><span class="item-code">${b['CODE MATIERE'] || 'N/A'}</span><span class="item-designation">${b['DESIGNATION'] || ''}</span><span class="item-etat">${b['ETAT'] || 'N/A'}</span><span>${b['ANNEE D\'ACQUISITION'] || ''}</span></div>`).join('')}</div>`;
+    return `<div class="item-list" style="max-height:300px; overflow:auto;">${biens.map(b => `<div class="item-row" style="padding:6px 10px; border-bottom:1px solid #e5e7eb; font-size:11px;"><span style="font-family:monospace; font-weight:bold; color:var(--primary);">${b['CODE MATIERE'] || 'N/A'}</span><span style="flex:1; margin:0 10px;">${b['DESIGNATION'] || ''}</span><span style="font-weight:bold;">${b['ETAT'] || 'N/A'}</span><span>${b['ANNEE D\'ACQUISITION'] || ''}</span></div>`).join('')}</div>`;
   }
   
   container.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="color:var(--primary); font-size:14px;">️ Confrontation - ${direction}</h3>
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <h3 style="color:var(--primary); font-size:14px;">⚖️ Confrontation - ${direction}</h3>
       <button class="btn btn-export" onclick="exportConfrontation('${direction}')">📊 Exporter la confrontation en Excel</button>
     </div>
     <div class="dashboard-grid">
-      <div class="stat-card" style="background:#fee2e2;"><h4>❌ Biens manquants</h4><div class="value">${biensImportesNonCoches.length}</div></div>
-      <div class="stat-card" style="background:#d1fae5;"><h4>✅ Biens existants</h4><div class="value">${biensImportesCoches.length}</div></div>
+      <div class="stat-card" style="background:#fee2e2;"><h4>❌ Biens manquants (non cochés)</h4><div class="value">${biensImportesNonCoches.length}</div></div>
+      <div class="stat-card" style="background:#d1fae5;"><h4>✅ Biens existants (cochés)</h4><div class="value">${biensImportesCoches.length}</div></div>
       <div class="stat-card" style="background:#cffafe;"><h4>🆕 Nouvelles saisies</h4><div class="value">${biensSaisis.length}</div></div>
       <div class="stat-card" style="background:#dbeafe;"><h4>📦 Total importés</h4><div class="value">${biensImportes.length}</div></div>
     </div>
@@ -992,7 +1442,7 @@ function renderReformes(direction, containerId) {
   const container = document.getElementById(containerId);
   const biens = DB.biens.filter(b => b.direction === direction && b.reforme);
   container.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h3 style="color:var(--primary); font-size:14px;">🔄 Biens proposés à la réforme</h3>
       <button class="btn btn-export" onclick="exportReformes('${direction}')">📊 Exporter les réformes en Excel</button>
     </div>
@@ -1026,7 +1476,7 @@ function renderGeneralList() {
   const content = document.getElementById('contentArea');
   const biens = DB.biens.filter(b => !b.reforme);
   content.innerHTML = `
-    <h2 style="color:var(--primary); margin-bottom:15px;"> Liste générale des biens</h2>
+    <h2 style="color:var(--primary); margin-bottom:15px;">📋 Liste générale des biens</h2>
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="showSubTab('general', 'liste', this)">📋 Liste générale</button>
       <button class="sub-tab-btn" onclick="showSubTab('general', 'synthese', this)">📊 Synthèse générale</button>
@@ -1037,7 +1487,7 @@ function renderGeneralList() {
     <div class="sub-content" id="general_confrontation"></div>`;
   const cListe = document.getElementById('general_liste');
   cListe.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h3 style="color:var(--primary); font-size:14px;">Liste complète de tous les biens</h3>
       <button class="btn btn-export" onclick="exportGeneralList()">📊 Exporter la liste générale en Excel</button>
     </div>
@@ -1045,7 +1495,7 @@ function renderGeneralList() {
       <input type="text" id="general_search_code" placeholder="Code" maxlength="6" oninput="filterTable('general_liste')" style="width:80px;">
       <input type="text" id="general_search_annee" placeholder="Année" maxlength="4" oninput="filterTable('general_liste')" style="width:70px;">
       <input type="text" id="general_search_numero" placeholder="Numéro" maxlength="4" oninput="filterTable('general_liste')" style="width:70px;">
-      <input type="text" id="general_search_general" placeholder=" Recherche..." oninput="filterTable('general_liste')" style="flex:1;">
+      <input type="text" id="general_search_general" placeholder="🔍 Recherche..." oninput="filterTable('general_liste')" style="flex:1;">
       <div class="search-count" id="general_search_count">${biens.length} bien(s)</div>
       <button class="btn" style="background:#6b7280; color:white;" onclick="chooseColumns('general_liste')">👁️ Colonnes</button>
     </div>
@@ -1089,7 +1539,7 @@ function renderGeneralSynthese() {
   });
   const rows = Object.values(synth);
   c.innerHTML = `
-    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <h3 style="color:var(--primary); font-size:14px;">Synthèse générale par code matière</h3>
       <button class="btn btn-export" onclick="exportGeneralSynthese()">📊 Exporter la synthèse générale en Excel</button>
     </div>
@@ -1109,12 +1559,12 @@ function renderGeneralConfrontation() {
   const biensImportesNonCoches = biensImportes.filter(b => !b.checked);
   const biensSaisis = tousBiens.filter(b => b.source === 'saisie' || !b.source);
   
-  let html = '<div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><h3 style="color:var(--primary); font-size:14px;">⚖️ Confrontation générale</h3>';
+  let html = '<div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;"><h3 style="color:var(--primary); font-size:14px;">⚖️ Confrontation générale</h3>';
   html += '<button class="btn btn-export" onclick="exportConfrontationAll()">📊 Exporter la confrontation complète en Excel</button></div>';
   html += `<div class="dashboard-grid">
     <div class="stat-card" style="background:#fee2e2;"><h4>📉 Biens manquants</h4><div class="value">${biensImportesNonCoches.length}</div></div>
     <div class="stat-card" style="background:#d1fae5;"><h4>✅ Biens existants</h4><div class="value">${biensImportesCoches.length}</div></div>
-    <div class="stat-card" style="background:#cffafe;"><h4> Nouvelles saisies</h4><div class="value">${biensSaisis.length}</div></div>
+    <div class="stat-card" style="background:#cffafe;"><h4>🆕 Nouvelles saisies</h4><div class="value">${biensSaisis.length}</div></div>
     <div class="stat-card" style="background:#dbeafe;"><h4>📦 Total importés</h4><div class="value">${biensImportes.length}</div></div>
   </div>`;
   c.innerHTML = html;
@@ -1227,7 +1677,7 @@ function renderRefImport(containerId, key, label) {
   const preview = (Array.isArray(data) ? data : Object.entries(data).map(([k,v]) => k + ' → ' + v)).slice(0, 50);
   c.innerHTML = `
     <p><b>${label}</b> - ${count} entrée(s)</p>
-    <label class="btn btn-success" style="display:inline-block;"> Importer Excel<input type="file" accept=".xlsx,.xls" onchange="importRef(event, '${key}')" style="display:none;"></label>
+    <label class="btn btn-success" style="display:inline-block;">📥 Importer Excel<input type="file" accept=".xlsx,.xls" onchange="importRef(event, '${key}')" style="display:none;"></label>
     <button class="btn btn-delete" onclick="clearRef('${key}')">🗑️ Vider</button>
     <div class="table-wrapper" style="margin-top:10px; max-height:300px;">
       <table class="patrimoine-table"><thead><tr><th>Entrée</th></tr></thead><tbody>${preview.map(v => `<tr><td>${v}</td></tr>`).join('')}</tbody></table>
@@ -1480,7 +1930,7 @@ async function deleteBien(id, btnElement) {
 }
 
 async function deleteAllBiens(direction) {
-  if (!isAdmin()) { alert(' La suppression de tous les biens est réservée aux administrateurs.'); return; }
+  if (!isAdmin()) { alert('⛔ La suppression de tous les biens est réservée aux administrateurs.'); return; }
   if (!confirm('Supprimer TOUS les biens de ' + direction + ' ?')) return;
   if (!confirm('Êtes-vous vraiment sûr ?')) return;
   DB.biens = DB.biens.filter(b => b.direction !== direction);
@@ -1509,7 +1959,7 @@ function openImport(direction) {
 }
 
 async function processImport() {
-  if (!isAdmin()) { alert(' L\'importation de fichiers Excel est réservée aux administrateurs.'); return; }
+  if (!isAdmin()) { alert('⛔ L\'importation de fichiers Excel est réservée aux administrateurs.'); return; }
   const file = document.getElementById('importFile').files[0];
   const sheet = document.getElementById('importSheet').value;
   const dir = document.getElementById('importDirection').value;
@@ -1618,6 +2068,20 @@ async function importAllData(event) {
   reader.readAsText(file);
 }
 
+function exportExcelPatrimoine() {
+  const wb = XLSX.utils.book_new();
+  const userDirs = DB.currentUser?.directions || DIRECTIONS;
+  userDirs.forEach(dir => {
+    const biens = DB.biens.filter(b => b.direction === dir);
+    const rows = [COLONNES];
+    biens.forEach(b => rows.push(COLONNES.map(c => b[c]||'')));
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:25},{wch:30},{wch:20},{wch:5},{wch:10},{wch:10},{wch:8},{wch:20},{wch:20},{wch:30},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, dir.substring(0, 31).replace(/[\\\/\?\*\[\]]/g, '_'));
+  });
+  XLSX.writeFile(wb, 'Patrimoine.xlsx');
+}
+
 async function changePassword() {
   const oldP = document.getElementById('oldPass').value;
   const n1 = document.getElementById('newPass1').value;
@@ -1675,7 +2139,7 @@ document.addEventListener('keydown', e => {
       DB.currentUser = JSON.parse(savedUser);
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-      document.getElementById('currentUserDisplay').textContent = ' ' + DB.currentUser.prenom + ' ' + DB.currentUser.nom + ' (' + DB.currentUser.type + ')';
+      document.getElementById('currentUserDisplay').textContent = '👤 ' + DB.currentUser.prenom + ' ' + DB.currentUser.nom + ' (' + DB.currentUser.type + ')';
       initApp();
     }
   } catch(e) {
