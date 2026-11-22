@@ -20,6 +20,14 @@ body { font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12px; background:
   text-align: left; line-height: 1.5; border: 2px solid #3b82f6; font-weight: 500;
 }
 
+#xlsxStatus {
+  position: fixed; bottom: 20px; right: 20px;
+  padding: 10px 15px; border-radius: 6px; font-size: 11px;
+  font-weight: bold; z-index: 999997; display: none;
+}
+#xlsxStatus.ok { background: #d1fae5; color: #065f46; border: 2px solid #10b981; display: block; }
+#xlsxStatus.err { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; display: block; }
+
 #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #3b82f6); display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 380px; }
 .login-box h2 { color: var(--primary); margin-bottom: 20px; text-align: center; font-size: 18px; }
@@ -280,14 +288,6 @@ td.editing input:focus, td.editing select:focus { outline: none; border-color: v
 
 .inline-edit-hint { background: #eff6ff; border-left: 4px solid var(--primary); padding: 8px 12px; margin-bottom: 10px; font-size: 11px; color: var(--primary); border-radius: 4px; }
 .highlight-match { background: #fde047; padding: 1px 2px; border-radius: 2px; font-weight: bold; color: #854d0e; }
-
-#xlsxStatus {
-  position: fixed; bottom: 20px; right: 20px;
-  padding: 10px 15px; border-radius: 6px; font-size: 11px;
-  font-weight: bold; z-index: 999997; display: none;
-}
-#xlsxStatus.ok { background: #d1fae5; color: #065f46; border: 2px solid #10b981; display: block; }
-#xlsxStatus.err { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; display: block; }
 </style>
 </head>
 <body>
@@ -333,6 +333,7 @@ td.editing input:focus, td.editing select:focus { outline: none; border-color: v
   <div id="contentArea"></div>
 </div>
 
+<!-- MODALS -->
 <div class="modal-overlay" id="addBienModal">
   <div class="modal" style="width:950px;">
     <div class="modal-header"><h3>➕ Ajouter un nouveau bien</h3><button class="modal-close" onclick="closeModal('addBienModal')" data-tooltip="Fermer sans enregistrer">×</button></div>
@@ -606,9 +607,9 @@ const SECRET_PASS_2 = 'ktibw';
 window.addEventListener('load', function() {
   const statusEl = document.getElementById('xlsxStatus');
   if (typeof XLSX !== 'undefined') {
-    statusEl.textContent = '✅ Bibliothèque Excel chargée avec succès';
+    statusEl.textContent = '✅ Bibliothèque Excel chargée (v' + (XLSX.version || '?') + ')';
     statusEl.className = 'ok';
-    console.log('✅ XLSX version:', XLSX.version || 'inconnue');
+    console.log('✅ XLSX chargé:', XLSX.version);
     setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
   } else {
     statusEl.textContent = '❌ Bibliothèque Excel NON chargée. Rechargez la page.';
@@ -979,23 +980,55 @@ function saveSystemJSON() {
   showSaveNotification(`✅ Sauvegarde complète du système exportée !`);
 }
 
-// ===== FONCTION D'EXPORT EXCEL ROBUSTE (CORRECTION PRINCIPALE) =====
-// Format: 10 lignes d'en-tête institutionnel, ligne 10 = en-têtes colonnes (fond bleu clair)
-// Ligne 10 répétée à l'impression, bordures simples, contour foncé
-function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, tableTitle) {
+// ===== FONCTION DE TÉLÉCHARGEMENT EXCEL ROBUSTE =====
+function triggerExcelDownload(wb, filename) {
   try {
-    // Vérification explicite que XLSX est chargé
     if (typeof XLSX === 'undefined') {
-      alert('❌ Bibliothèque Excel non chargée. Vérifiez votre connexion Internet et rechargez la page.');
+      alert('❌ Bibliothèque Excel non chargée. Rechargez la page.');
       return false;
     }
     
-    console.log('📊 Début export Excel:', filename);
-    console.log('📊 Nombre de lignes de données:', dataRows.length);
+    console.log('📊 Début téléchargement Excel:', filename);
+    
+    // Méthode 1: XLSX.writeFile (recommandée)
+    if (typeof XLSX.writeFile === 'function') {
+      XLSX.writeFile(wb, filename + '.xlsx');
+      console.log('✅ Export réussi via writeFile');
+      return true;
+    }
+    
+    // Méthode 2: Fallback avec Blob
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename + '.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    console.log('✅ Export réussi via Blob fallback');
+    return true;
+  } catch(e) {
+    console.error('❌ Erreur export Excel:', e);
+    alert('❌ Erreur lors de l\'export : ' + e.message);
+    return false;
+  }
+}
+
+// ===== EXPORT EXCEL AVEC EN-TÊTE INSTITUTIONNEL (10 LIGNES) =====
+function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, tableTitle) {
+  try {
+    if (typeof XLSX === 'undefined') {
+      alert('❌ Bibliothèque Excel non chargée. Rechargez la page.');
+      return false;
+    }
+    
+    console.log('📊 Création Excel:', filename, '- Lignes:', dataRows.length);
     
     const wb = XLSX.utils.book_new();
     
-    // En-tête institutionnel (9 lignes)
     const headerRows = [
       ["INSTITUT NATIONAL DE FORMATION DES PERSONNEL DE L'EDUCATION"],
       ["DIRECTION GENERALE"],
@@ -1011,15 +1044,12 @@ function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, table
     const allRows = [...headerRows, ...dataRows];
     const ws = XLSX.utils.aoa_to_sheet(allRows);
     
-    // Largeurs de colonnes
     ws['!cols'] = [
       {wch:25},{wch:35},{wch:20},{wch:8},{wch:12},{wch:12},{wch:18},{wch:25},{wch:25},{wch:35},{wch:15}
     ];
     
-    // Configuration pour répéter la ligne 10 (index 9) à l'impression
     ws['!printTitles'] = { rows: [9, 9] };
     
-    // Styles
     const thinBorder = { 
       top: { style: "thin", color: { rgb: "000000" } }, 
       bottom: { style: "thin", color: { rgb: "000000" } }, 
@@ -1044,13 +1074,11 @@ function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, table
         if (!ws[address]) continue;
         
         if (R < 9) {
-          // Lignes 1-9 : en-tête institutionnel (pas de couleur, pas de fusion)
           ws[address].s = { 
             font: { bold: true, sz: 11 }, 
             alignment: { horizontal: "left", vertical: "center" }
           };
         } else if (R === 9) {
-          // Ligne 10 : En-têtes de colonnes - FOND BLEU CLAIR
           ws[address].s = { 
             font: { bold: true, sz: 11 }, 
             fill: { fgColor: { rgb: "DBEAFE" } },
@@ -1058,7 +1086,6 @@ function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, table
             border: thinBorder
           };
         } else {
-          // Lignes 11+ : Données avec bordures simples
           const isBorderRow = (R === 10 || R === totalRows - 1);
           const isBorderCol = (C === 0 || C === numCols - 1);
           const isContour = isBorderRow || isBorderCol;
@@ -1073,15 +1100,10 @@ function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, table
       }
     }
     
-    // Nom de feuille sans caractères spéciaux
     const safeSheetName = (sheetName || 'Inventaire').replace(/[^a-zA-Z0-9 _-]/g, '').substring(0, 31) || 'Inventaire';
     XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
     
-    // Téléchargement avec XLSX.writeFile (méthode recommandée)
-    XLSX.writeFile(wb, filename + '.xlsx');
-    
-    console.log('✅ Export Excel réussi:', filename);
-    return true;
+    return triggerExcelDownload(wb, filename);
   } catch(e) {
     console.error('❌ Erreur export Excel:', e);
     alert('❌ Erreur lors de l\'export : ' + e.message);
@@ -1586,7 +1608,7 @@ function exportResumeExcel(checkedStatus) {
   biens.forEach(b => {
     rows.push([b['CODE MATIERE']||'', b['DESIGNATION']||'', b['TYPE/MODELE']||'', b['ETAT']||'', b['FORMAT']||'', b['ANNEE D\'ACQUISITION']||'', b['BUREAU/SERVICE']||'', b['UTILISATEUR']||'', b.direction||'']);
   });
-  const ok = createExcelWithInstitutionalHeader(rows, filename, 'Résumé', `Résumé des biens ${statusLabel === 'Coches' ? 'cochés' : 'non cochés'}`);
+  const ok = createExcelWithInstitutionalHeader(rows, filename, 'Resume', `Résumé des biens ${statusLabel === 'Coches' ? 'cochés' : 'non cochés'}`);
   if (ok) showSaveNotification(`✅ ${biens.length} exporté(s) !`);
 }
 
@@ -1632,7 +1654,7 @@ function exportCurrentDetails() {
   currentDetailsBiens.forEach(b => {
     rows.push([b['CODE MATIERE']||'', b['DESIGNATION']||'', b['TYPE/MODELE']||'', b['ETAT']||'', b['FORMAT']||'', b['ANNEE D\'ACQUISITION']||'', b['BUREAU/SERVICE']||'', b['UTILISATEUR']||'', b.direction||'']);
   });
-  const ok = createExcelWithInstitutionalHeader(rows, filename, 'Détails', currentDetailsTitle);
+  const ok = createExcelWithInstitutionalHeader(rows, filename, 'Details', currentDetailsTitle);
   if (ok) showSaveNotification(`✅ Exporté !`);
 }
 
@@ -1784,7 +1806,7 @@ function updateResumeNonCochesTable() {
   if (countDisplay) countDisplay.innerHTML = `<span class="resume-count-badge">${rows.length} désignation(s)</span>`;
 }
 
-// ===== ÉDITION INLINE =====
+// ===== ÉDITION INLINE (SANS PERTE DE FILTRES) =====
 function buildOptionsHTML(list, currentValue) {
   let html = '<option value="">--</option>';
   list.forEach(item => {
@@ -1797,8 +1819,8 @@ function buildOptionsHTML(list, currentValue) {
 function startInlineEdit(bienId, containerId) {
   const bien = DB.biens.find(b => b.id === bienId);
   if (!bien) return;
-  if (currentlyEditingRow) cancelInlineEdit(currentlyEditingRow.containerId);
-  currentlyEditingRow = { bienId, containerId };
+  if (currentlyEditingRow) cancelInlineEdit(currentlyEditingRow.containerId, true);
+  currentlyEditingRow = { bienId, containerId, originalValues: {...bien} };
   const row = document.querySelector(`tr[data-bien-id="${bienId}"]`);
   if (!row) return;
   row.classList.add('editing-row');
@@ -1826,7 +1848,7 @@ function startInlineEdit(bienId, containerId) {
   const actionsCell = cells[cells.length - 1];
   actionsCell.innerHTML = `
     <button class="btn btn-save-inline" onclick="saveInlineEdit('${bienId}', '${containerId}')" data-tooltip="Enregistrer les modifications">💾</button>
-    <button class="btn btn-cancel-inline" onclick="cancelInlineEdit('${containerId}')" data-tooltip="Annuler les modifications">❌</button>
+    <button class="btn btn-cancel-inline" onclick="cancelInlineEdit('${containerId}', false)" data-tooltip="Annuler les modifications">❌</button>
   `;
   const firstInput = cells[0].querySelector('input');
   if (firstInput) firstInput.focus();
@@ -1859,17 +1881,91 @@ async function saveInlineEdit(bienId, containerId) {
   bien['UTILISATEUR'] = newUtilisateur;
   DB.actions.push({ date: new Date().toISOString(), user: DB.currentUser?.username || 'inconnu', action: `Modification inline: ${newCode} - ${newDes}` });
   await saveDB();
+  
+  // Mise à jour UNIQUEMENT de la ligne dans le DOM (sans re-render le tableau)
+  const row = document.querySelector(`tr[data-bien-id="${bienId}"]`);
+  if (row) {
+    const cells = row.querySelectorAll('td');
+    cells[0].classList.remove('editing');
+    cells[0].textContent = newCode;
+    cells[1].classList.remove('editing');
+    cells[1].textContent = newDes;
+    cells[2].classList.remove('editing');
+    cells[2].textContent = newType;
+    cells[4].classList.remove('editing');
+    cells[4].textContent = newEtat;
+    cells[5].classList.remove('editing');
+    cells[5].textContent = newFormat;
+    cells[6].classList.remove('editing');
+    cells[6].textContent = newAnnee;
+    cells[7].classList.remove('editing');
+    cells[7].textContent = newBureau;
+    cells[8].classList.remove('editing');
+    cells[8].textContent = newUtilisateur;
+    row.classList.remove('editing-row');
+    // Restaurer la cellule actions
+    const isExistants = containerId.includes('_existants');
+    const admin = isAdmin();
+    cells[cells.length - 1].innerHTML = `
+      <input type="checkbox" ${bien.checked ? 'checked' : ''} onchange="toggleCheck('${bienId}', this.checked)" data-tooltip="Cocher/décocher ce bien">
+      <button class="btn btn-edit" onclick="startInlineEdit('${bienId}', '${containerId}')" data-tooltip="Éditer">✏️</button>
+      <button class="btn btn-hu" onclick="markAsHU('${bienId}', this)" data-tooltip="Marquer Hors d'Usage">🚫 HU</button>
+      <button class="btn btn-mutate" onclick="openMutateModal('${bienId}')" data-tooltip="Muter">🔄</button>
+      ${admin ? `<button class="btn btn-delete" onclick="deleteBien('${bienId}', this)" data-tooltip="Supprimer">🗑️</button>` : ''}
+      ${!isExistants ? `<button class="btn btn-reforme" onclick="proposeReforme('${bienId}', this)" data-tooltip="Proposer à la réforme">📝</button>` : ''}
+    `;
+  }
+  
   currentlyEditingRow = null;
-  showSaveNotification(`✅ "${newCode}" modifié !`);
-  refreshCurrentView(true);
+  showSaveNotification(`✅ "${newCode}" modifié ! (filtres conservés)`);
+  // NE PAS appeler refreshCurrentView pour conserver les filtres
+  buildTabs(); // Mettre à jour les compteurs du combobox
 }
 
-function cancelInlineEdit(containerId) {
+function cancelInlineEdit(containerId, silent = false) {
+  if (!currentlyEditingRow) return;
+  const bienId = currentlyEditingRow.bienId;
+  const originalValues = currentlyEditingRow.originalValues;
+  const row = document.querySelector(`tr[data-bien-id="${bienId}"]`);
+  
+  if (row) {
+    const cells = row.querySelectorAll('td');
+    // Restaurer les valeurs originales dans le DOM
+    cells[0].classList.remove('editing');
+    cells[0].textContent = originalValues['CODE MATIERE'] || '';
+    cells[1].classList.remove('editing');
+    cells[1].textContent = originalValues['DESIGNATION'] || '';
+    cells[2].classList.remove('editing');
+    cells[2].textContent = originalValues['TYPE/MODELE'] || '';
+    cells[4].classList.remove('editing');
+    cells[4].textContent = originalValues['ETAT'] || '';
+    cells[5].classList.remove('editing');
+    cells[5].textContent = originalValues['FORMAT'] || '';
+    cells[6].classList.remove('editing');
+    cells[6].textContent = originalValues['ANNEE D\'ACQUISITION'] || '';
+    cells[7].classList.remove('editing');
+    cells[7].textContent = originalValues['BUREAU/SERVICE'] || '';
+    cells[8].classList.remove('editing');
+    cells[8].textContent = originalValues['UTILISATEUR'] || '';
+    row.classList.remove('editing-row');
+    // Restaurer la cellule actions
+    const isExistants = containerId.includes('_existants');
+    const admin = isAdmin();
+    cells[cells.length - 1].innerHTML = `
+      <input type="checkbox" ${originalValues.checked ? 'checked' : ''} onchange="toggleCheck('${bienId}', this.checked)" data-tooltip="Cocher/décocher">
+      <button class="btn btn-edit" onclick="startInlineEdit('${bienId}', '${containerId}')" data-tooltip="Éditer">✏️</button>
+      <button class="btn btn-hu" onclick="markAsHU('${bienId}', this)" data-tooltip="Marquer Hors d'Usage">🚫 HU</button>
+      <button class="btn btn-mutate" onclick="openMutateModal('${bienId}')" data-tooltip="Muter">🔄</button>
+      ${admin ? `<button class="btn btn-delete" onclick="deleteBien('${bienId}', this)" data-tooltip="Supprimer">🗑️</button>` : ''}
+      ${!isExistants ? `<button class="btn btn-reforme" onclick="proposeReforme('${bienId}', this)" data-tooltip="Proposer à la réforme">📝</button>` : ''}
+    `;
+  }
+  
   currentlyEditingRow = null;
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  const biens = JSON.parse(container.dataset.biens || '[]');
-  renderPaginatedTable(containerId, biens);
+  if (!silent) {
+    showSaveNotification('❌ Modifications annulées (filtres conservés)');
+  }
+  // NE PAS appeler refreshCurrentView pour conserver les filtres
 }
 
 // ===== DIRECTION =====
@@ -1892,7 +1988,7 @@ function renderDirectionTab(direction) {
         ${admin ? `<button class="btn btn-doublons" id="btnDoublons" data-tooltip="Supprimer les biens en double">🗑️ Doublons</button>` : ''}
       </div>
     </div>
-    <div class="inline-edit-hint">💡 <b>Astuce :</b> Cliquez sur ✏️ pour modifier les cellules. CODE/ANNEE : saisie libre. DESIGNATION/MODELE/SERVICE/UTILISATEUR : combobox alimentés par les fichiers importés dans Paramètres.</div>
+    <div class="inline-edit-hint">💡 <b>Astuce :</b> Cliquez sur ✏️ pour modifier les cellules. CODE/ANNEE : saisie libre. DESIGNATION/MODELE/SERVICE/UTILISATEUR : combobox alimentés par les fichiers importés dans Paramètres. Les filtres de recherche sont conservés après modification.</div>
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="showSubTab('${tabId}', 'biens', this)" data-tooltip="Liste complète">📋 Liste</button>
       <button class="sub-tab-btn" onclick="showSubTab('${tabId}', 'existants', this)" data-tooltip="Biens cochés comme existants">✅ Existant</button>
@@ -1914,7 +2010,6 @@ function renderDirectionTab(direction) {
     <div class="sub-content" id="${tabId}_hu"></div>
     <div class="sub-content" id="${tabId}_mutated"></div>`;
   
-  // Attacher les event listeners avec data-direction
   const btnAdd = document.getElementById('btnAddBien');
   if (btnAdd) btnAdd.addEventListener('click', () => openAddBien(direction));
   const btnImport = document.getElementById('btnImportExcel');
@@ -1977,7 +2072,6 @@ function renderBiensList(direction, containerId, filterChecked, checkedValue, ex
     <div class="table-wrapper"><table class="patrimoine-table" id="${tableId}"><thead><tr id="${tableId}_head"></tr></thead><tbody id="${tableId}_body"></tbody></table></div>
     <div class="pagination-controls" id="${containerId}_pagination"></div>`;
   
-  // Attacher les event listeners pour les boutons d'export et remplacement
   container.querySelectorAll('[data-export-container]').forEach(btn => {
     btn.addEventListener('click', () => {
       const cid = btn.dataset.exportContainer;
@@ -3753,25 +3847,10 @@ function exportExcelPatrimoine() {
       XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Direction');
     });
     const filename = `Inventaire_Patrimoine_${getDateSuffix()}`;
-    const ok = downloadWorkbook(wb, filename);
+    const ok = triggerExcelDownload(wb, filename);
     if (ok) showSaveNotification(`✅ Exporté !`);
   } catch(e) {
     alert('❌ Erreur : ' + e.message);
-  }
-}
-
-function downloadWorkbook(wb, filename) {
-  try {
-    if (typeof XLSX === 'undefined') {
-      alert('❌ Bibliothèque Excel non chargée.');
-      return false;
-    }
-    XLSX.writeFile(wb, filename + '.xlsx');
-    return true;
-  } catch(e) {
-    console.error('Erreur téléchargement:', e);
-    alert('❌ Erreur lors du téléchargement : ' + e.message);
-    return false;
   }
 }
 
@@ -3791,7 +3870,7 @@ function openModal(id) { document.getElementById(id).classList.add('show'); make
 function closeModal(id) { 
   document.getElementById(id).classList.remove('show'); 
   if (id === 'detailsModal') { currentDetailsBiens = []; currentDetailsTitle = ''; }
-  if (currentlyEditingRow) cancelInlineEdit(currentlyEditingRow.containerId);
+  if (currentlyEditingRow) cancelInlineEdit(currentlyEditingRow.containerId, true);
 }
 
 function makeDraggable(el) {
@@ -3817,7 +3896,7 @@ document.addEventListener('click', e => { if (e.target.classList.contains('modal
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    if (currentlyEditingRow) { cancelInlineEdit(currentlyEditingRow.containerId); return; }
+    if (currentlyEditingRow) { cancelInlineEdit(currentlyEditingRow.containerId, true); return; }
     const anyModalOpen = document.querySelector('.modal-overlay.show');
     if (!anyModalOpen) {
       document.querySelectorAll('.search-bar input').forEach(i => i.value = '');
