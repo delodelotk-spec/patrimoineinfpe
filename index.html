@@ -564,6 +564,14 @@ const DIRECTIONS = [
   "Secrétariat général"
 ];
 
+// Couleurs uniques pour chaque direction dans le combobox
+const DIR_COLORS = [
+  "#1e3a8a", "#0e7490", "#047857", "#65a30d", "#ca8a04", 
+  "#ea580c", "#dc2626", "#9333ea", "#c026d3", "#db2777",
+  "#0d9488", "#059669", "#4f46e5", "#7c3aed", "#2563eb",
+  "#0891b2", "#16a34a"
+];
+
 const CODE_PREFIX = {
   "Agence Comptable": "/23/421.08/11/18/03/", "Bureau comptable Matières principal": "/23/421.08/11/18/03/",
   "Direction de l'Administration des Finances": "/23/421.08/11/18/03/", "Direction de la Formation continue et de la Recherche-action": "/23/421.08/11/18/03/",
@@ -1012,7 +1020,7 @@ function triggerExcelDownload(wb, filename) {
     return true;
   } catch(e) {
     console.error('❌ Erreur export Excel:', e);
-    alert('❌ Erreur lors de l\'export : ' + e.message);
+    alert('❌ Erreur lors du téléchargement : ' + e.message);
     return false;
   }
 }
@@ -1111,7 +1119,7 @@ function createExcelWithInstitutionalHeader(dataRows, filename, sheetName, table
   }
 }
 
-// ===== COMBOBOX =====
+// ===== COMBOBOX AVEC COULEURS UNIQUES =====
 function getComboboxItems() {
   const user = DB.currentUser;
   if (!user) return [];
@@ -1146,12 +1154,21 @@ function buildTabs() {
   if (!combobox) return;
   const items = getComboboxItems();
   combobox.innerHTML = '<option value="">-- Sélectionner une vue --</option>';
+  
+  let colorIndex = 0;
   items.forEach(item => {
     const opt = document.createElement('option');
     opt.value = item.value;
     opt.textContent = item.label;
+    // Appliquer une couleur unique aux directions uniquement
+    if (item.type === 'direction' || item.type === 'direction_hu' || item.type === 'direction_mutated') {
+      opt.style.color = DIR_COLORS[colorIndex % DIR_COLORS.length];
+      opt.style.fontWeight = 'bold';
+      colorIndex++;
+    }
     combobox.appendChild(opt);
   });
+  
   const allOptions = Array.from(combobox.options).filter(o => o.value !== '');
   if (allOptions.length > 0) {
     combobox.value = allOptions[0].value;
@@ -1903,7 +1920,6 @@ async function saveInlineEdit(bienId, containerId) {
     cells[8].classList.remove('editing');
     cells[8].textContent = newUtilisateur;
     row.classList.remove('editing-row');
-    // Restaurer la cellule actions
     const isExistants = containerId.includes('_existants');
     const admin = isAdmin();
     cells[cells.length - 1].innerHTML = `
@@ -1930,7 +1946,6 @@ function cancelInlineEdit(containerId, silent = false) {
   
   if (row) {
     const cells = row.querySelectorAll('td');
-    // Restaurer les valeurs originales dans le DOM
     cells[0].classList.remove('editing');
     cells[0].textContent = originalValues['CODE MATIERE'] || '';
     cells[1].classList.remove('editing');
@@ -1948,7 +1963,6 @@ function cancelInlineEdit(containerId, silent = false) {
     cells[8].classList.remove('editing');
     cells[8].textContent = originalValues['UTILISATEUR'] || '';
     row.classList.remove('editing-row');
-    // Restaurer la cellule actions
     const isExistants = containerId.includes('_existants');
     const admin = isAdmin();
     cells[cells.length - 1].innerHTML = `
@@ -1988,7 +2002,7 @@ function renderDirectionTab(direction) {
         ${admin ? `<button class="btn btn-doublons" id="btnDoublons" data-tooltip="Supprimer les biens en double">🗑️ Doublons</button>` : ''}
       </div>
     </div>
-    <div class="inline-edit-hint">💡 <b>Astuce :</b> Cliquez sur ✏️ pour modifier les cellules. CODE/ANNEE : saisie libre. DESIGNATION/MODELE/SERVICE/UTILISATEUR : combobox alimentés par les fichiers importés dans Paramètres. Les filtres de recherche sont conservés après modification.</div>
+    <div class="inline-edit-hint">💡 <b>Astuce :</b> Cliquez sur ✏️ pour modifier les cellules. CODE/ANNEE : saisie libre. DESIGNATION/MODELE/SERVICE/UTILISATEUR : combobox alimentés par les fichiers importés dans Paramètres. Les filtres sont conservés après modification.</div>
     <div class="sub-tabs">
       <button class="sub-tab-btn active" onclick="showSubTab('${tabId}', 'biens', this)" data-tooltip="Liste complète">📋 Liste</button>
       <button class="sub-tab-btn" onclick="showSubTab('${tabId}', 'existants', this)" data-tooltip="Biens cochés comme existants">✅ Existant</button>
